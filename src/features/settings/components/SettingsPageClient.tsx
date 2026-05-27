@@ -4,12 +4,13 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { selectAuthLoading, selectUser } from "@/features/auth/store/selectors";
 import type { UserSettings } from "@/features/settings/types";
+import { selectSettings, selectSettingsStatus } from "@/features/settings/store/selectors";
 import { hydrateSettings } from "@/features/settings/store/slice";
 import { fetchSettings } from "@/features/settings/store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type SettingsPageClientProps = {
-  section: "appearance" | "notifications";
+  section: "appearance" | "notifications" | "security";
   initialSettings?: UserSettings;
   children: React.ReactNode;
 };
@@ -23,6 +24,8 @@ export function SettingsPageClient({
   const router = useRouter();
   const user = useAppSelector(selectUser);
   const isLoading = useAppSelector(selectAuthLoading);
+  const settings = useAppSelector(selectSettings);
+  const settingsStatus = useAppSelector(selectSettingsStatus);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -38,7 +41,7 @@ export function SettingsPageClient({
     }
   }, [dispatch, initialSettings, user]);
 
-  if (isLoading) {
+  if (isLoading || (user && settingsStatus === "loading" && !settings)) {
     return <p className="font-lora text-warm-gray">טוען…</p>;
   }
 

@@ -20,28 +20,36 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { selectUser } from "@/features/auth/store/selectors";
 import type { AppearanceSettings } from "@/features/settings/types";
-import { selectSettingsSaveStatus } from "@/features/settings/store/selectors";
+import { selectSettingsSaveStatus, selectSettings } from "@/features/settings/store/selectors";
 import { updateAppearance } from "@/features/settings/store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type AppearanceFormProps = {
-  initialValues: AppearanceSettings;
+  initialValues?: AppearanceSettings;
 };
 
 export function AppearanceForm({ initialValues }: AppearanceFormProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
+  const settings = useAppSelector(selectSettings);
   const saveStatus = useAppSelector(selectSettingsSaveStatus);
   const { setTheme } = useTheme();
-  const [form, setForm] = useState(initialValues);
+  const resolved = initialValues ?? settings?.appearance;
+  const [form, setForm] = useState<AppearanceSettings | null>(resolved ?? null);
 
   useEffect(() => {
-    setForm(initialValues);
-  }, [initialValues]);
+    if (resolved) {
+      setForm(resolved);
+    }
+  }, [resolved]);
+
+  if (!form) {
+    return <p className="font-lora text-warm-gray">טוען הגדרות…</p>;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !form) return;
     try {
       await dispatch(
         updateAppearance({ userId: user.id, appearance: form })
@@ -63,10 +71,11 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
           <Select
             value={form.theme}
             onValueChange={(value) =>
-              setForm((prev) => ({
-                ...prev,
-                theme: value as AppearanceSettings["theme"],
-              }))
+              setForm((prev) =>
+                prev
+                  ? { ...prev, theme: value as AppearanceSettings["theme"] }
+                  : prev
+              )
             }
           >
             <SelectTrigger className="font-lora">
@@ -85,10 +94,14 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
           <Select
             value={form.language}
             onValueChange={(value) =>
-              setForm((prev) => ({
-                ...prev,
-                language: value as AppearanceSettings["language"],
-              }))
+              setForm((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      language: value as AppearanceSettings["language"],
+                    }
+                  : prev
+              )
             }
           >
             <SelectTrigger className="font-lora">
@@ -107,10 +120,14 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
           <Select
             value={form.fontSize}
             onValueChange={(value) =>
-              setForm((prev) => ({
-                ...prev,
-                fontSize: value as AppearanceSettings["fontSize"],
-              }))
+              setForm((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      fontSize: value as AppearanceSettings["fontSize"],
+                    }
+                  : prev
+              )
             }
           >
             <SelectTrigger className="font-lora">
@@ -129,7 +146,7 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
           <Select
             value={form.currency}
             onValueChange={(value) =>
-              setForm((prev) => ({ ...prev, currency: value }))
+              setForm((prev) => (prev ? { ...prev, currency: value } : prev))
             }
           >
             <SelectTrigger id="currency" className="font-lora">
@@ -156,7 +173,7 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
             id="compact-mode"
             checked={form.compactMode}
             onCheckedChange={(checked) =>
-              setForm((prev) => ({ ...prev, compactMode: checked }))
+              setForm((prev) => (prev ? { ...prev, compactMode: checked } : prev))
             }
           />
         </div>

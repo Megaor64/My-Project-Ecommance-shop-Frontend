@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import httpClient from "@/lib/httpClient";
+
+type AdminStats = {
+  userCount?: number;
+};
 
 export function AdminStatsBanner() {
   const [userCount, setUserCount] = useState<number | null>(null);
@@ -9,10 +14,8 @@ export function AdminStatsBanner() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/stats/admin");
-        if (!res.ok) return;
-        const data = (await res.json()) as { userCount?: number };
-        if (!cancelled && typeof data.userCount === "number") {
+        const { data } = await httpClient.get<AdminStats>("/stats/admin");
+        if (!cancelled && typeof data?.userCount === "number") {
           setUserCount(data.userCount);
         }
       } catch {

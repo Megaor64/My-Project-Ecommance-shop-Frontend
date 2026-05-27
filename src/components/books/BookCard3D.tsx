@@ -24,7 +24,7 @@ export function BookCard3D({
       className={cn("book group", className)}
       aria-label={`${book.title} by ${book.author}`}
     >
-      <Link href={`/books/${book.id}`} className="block">
+      <Link href={`/book?id=${encodeURIComponent(book.id)}`} className="block">
         <div
           className={cn(
             "relative mx-auto",

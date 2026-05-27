@@ -1,8 +1,17 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { AdminLoginForm } from "@/components/auth/AdminLoginForm";
 import { fetchAuthPublicConfig } from "@/lib/auth-config";
 
-export default async function AdminLoginPage() {
-  const { adminRegisterEnabled } = await fetchAuthPublicConfig();
+export default function AdminLoginPage() {
+  const [showAdminRegister, setShowAdminRegister] = useState(false);
 
-  return <AdminLoginForm showAdminRegister={adminRegisterEnabled} />;
+  useEffect(() => {
+    void fetchAuthPublicConfig().then((config) => {
+      setShowAdminRegister(config.adminRegisterEnabled);
+    });
+  }, []);
+
+  return <AdminLoginForm showAdminRegister={showAdminRegister} />;
 }

@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { mapInquiry, type Inquiry, type InquiryStatus } from "@/lib/inquiries";
+import httpClient from "@/lib/httpClient";
 import { cn } from "@/lib/utils";
 
 type FilterTab = "all" | InquiryStatus;
@@ -53,9 +54,7 @@ export function InquiriesPanel() {
   const loadInquiries = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/inquiries", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to load inquiries");
-      const data = (await res.json()) as Record<string, unknown>[];
+      const { data } = await httpClient.get<Record<string, unknown>[]>("/inquiries");
       setInquiries(
         Array.isArray(data) ? data.map((item) => mapInquiry(item)) : []
       );
@@ -80,26 +79,16 @@ export function InquiriesPanel() {
     id: string,
     updates: Partial<Pick<Inquiry, "status" | "reply">>
   ) {
-    const res = await fetch(`/api/inquiries/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(updates),
-    });
-    const json = (await res.json()) as {
-      message?: string;
-      inquiry?: Record<string, unknown>;
-    };
-    if (!res.ok) {
-      throw new Error(json.message ?? "Update failed");
-    }
-    const doc = json.inquiry;
-    if (!doc || typeof doc !== "object") {
-      throw new Error(json.message ?? "Update failed");
+    const { data } = await httpClient.patch<Record<string, unknown>>(
+      `/inquiries/${id}`,
+      updates
+    );
+    if (!data || typeof data !== "object") {
+      throw new Error("Update failed");
     }
     return {
-      inquiry: mapInquiry(doc),
-      message: json.message,
+      inquiry: mapInquiry(data),
+      message: "Inquiry updated",
     };
   }
 
@@ -155,14 +144,9 @@ export function InquiriesPanel() {
   async function handleDelete(id: string) {
     if (!confirm("Delete this inquiry permanently?")) return;
     try {
-      const res = await fetch(`/api/inquiries/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const json = (await res.json()) as { message?: string };
-      if (!res.ok) throw new Error(json.message ?? "Delete failed");
+      await httpClient.delete(`/inquiries/${id}`);
       await loadInquiries();
-      toast.success(json.message ?? "Inquiry deleted.");
+      toast.success("Inquiry deleted.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not delete inquiry.");
     }

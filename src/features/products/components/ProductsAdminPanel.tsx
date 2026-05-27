@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import httpClient from "@/lib/httpClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -81,9 +82,7 @@ export function ProductsAdminPanel() {
 
   const loadStats = useCallback(async () => {
     try {
-      const res = await fetch("/api/stats/admin");
-      if (!res.ok) return;
-      const data = (await res.json()) as AdminStats;
+      const { data } = await httpClient.get<AdminStats>("/stats/admin");
       const map: Record<string, number> = {};
       for (const row of data.salesByProduct ?? []) {
         map[String(row.productId)] = row.totalSold;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
+import httpClient from "@/lib/httpClient";
 import { selectUser } from "@/features/auth/store/selectors";
 import { fetchMe, logout } from "@/features/auth/store/thunks";
 import {
@@ -92,14 +93,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
         return;
       }
 
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      const data = (await res.json()) as { message?: string };
-      if (!res.ok) throw new Error(data.message ?? "Update failed");
+      await httpClient.patch(`/users/${user.id}`, body);
 
       await dispatch(fetchMe()).unwrap();
       toast.success("Profile updated.");

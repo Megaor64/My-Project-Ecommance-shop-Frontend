@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { selectUser } from "@/features/auth/store/selectors";
 import type { NotificationSettings } from "@/features/settings/types";
-import { selectSettingsSaveStatus } from "@/features/settings/store/selectors";
+import { selectSettingsSaveStatus, selectSettings } from "@/features/settings/store/selectors";
 import { updateNotifications } from "@/features/settings/store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type NotificationsFormProps = {
-  initialValues: NotificationSettings;
+  initialValues?: NotificationSettings;
 };
 
 function ToggleRow({
@@ -47,16 +47,25 @@ function ToggleRow({
 export function NotificationsForm({ initialValues }: NotificationsFormProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
+  const settings = useAppSelector(selectSettings);
   const saveStatus = useAppSelector(selectSettingsSaveStatus);
-  const [form, setForm] = useState(initialValues);
+  const resolved = initialValues ?? settings?.notifications;
+
+  const [form, setForm] = useState<NotificationSettings | null>(resolved ?? null);
 
   useEffect(() => {
-    setForm(initialValues);
-  }, [initialValues]);
+    if (resolved) {
+      setForm(resolved);
+    }
+  }, [resolved]);
+
+  if (!form) {
+    return <p className="font-lora text-warm-gray">טוען הגדרות…</p>;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !form) return;
     try {
       await dispatch(
         updateNotifications({ userId: user.id, notifications: form })
@@ -76,10 +85,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="עדכוני הזמנה"
           checked={form.email.orderUpdates}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              email: { ...prev.email, orderUpdates: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? { ...prev, email: { ...prev.email, orderUpdates: checked } }
+                : prev
+            )
           }
         />
         <ToggleRow
@@ -87,10 +97,9 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="שיווק"
           checked={form.email.marketing}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              email: { ...prev.email, marketing: checked },
-            }))
+            setForm((prev) =>
+              prev ? { ...prev, email: { ...prev.email, marketing: checked } } : prev
+            )
           }
         />
         <ToggleRow
@@ -98,10 +107,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="ניוזלטר"
           checked={form.email.newsletter}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              email: { ...prev.email, newsletter: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? { ...prev, email: { ...prev.email, newsletter: checked } }
+                : prev
+            )
           }
         />
       </section>
@@ -113,10 +123,14 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="עדכוני הזמנה"
           checked={form.browser.orderUpdates}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              browser: { ...prev.browser, orderUpdates: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    browser: { ...prev.browser, orderUpdates: checked },
+                  }
+                : prev
+            )
           }
         />
         <ToggleRow
@@ -124,10 +138,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="מבצעים"
           checked={form.browser.promotions}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              browser: { ...prev.browser, promotions: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? { ...prev, browser: { ...prev.browser, promotions: checked } }
+                : prev
+            )
           }
         />
       </section>
@@ -142,10 +157,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
             id="sms-phone"
             value={form.sms.phone}
             onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                sms: { ...prev.sms, phone: e.target.value },
-              }))
+              setForm((prev) =>
+                prev
+                  ? { ...prev, sms: { ...prev.sms, phone: e.target.value } }
+                  : prev
+              )
             }
             className="mt-1 font-lora"
             placeholder="+972..."
@@ -156,10 +172,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="עדכוני הזמנה"
           checked={form.sms.orderUpdates}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              sms: { ...prev.sms, orderUpdates: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? { ...prev, sms: { ...prev.sms, orderUpdates: checked } }
+                : prev
+            )
           }
         />
         <ToggleRow
@@ -167,10 +184,11 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
           label="מבצעים"
           checked={form.sms.promotions}
           onCheckedChange={(checked) =>
-            setForm((prev) => ({
-              ...prev,
-              sms: { ...prev.sms, promotions: checked },
-            }))
+            setForm((prev) =>
+              prev
+                ? { ...prev, sms: { ...prev.sms, promotions: checked } }
+                : prev
+            )
           }
         />
       </section>

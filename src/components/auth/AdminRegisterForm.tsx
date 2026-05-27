@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
+import { adminRegister } from "@/features/auth/services/authService";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -37,18 +38,7 @@ export function AdminRegisterForm() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/auth/admin/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, adminPass }),
-      });
-      const data = (await res.json()) as {
-        message?: string;
-        email?: string;
-      };
-      if (!res.ok) {
-        throw new Error(data.message ?? "Registration failed");
-      }
+      const data = await adminRegister({ name, email, adminPass });
       toast.success("Check your email for a verification code.");
       setEmail(data.email ?? email);
       setStep("verify");

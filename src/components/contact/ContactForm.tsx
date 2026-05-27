@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import httpClient from "@/lib/httpClient";
 import {
   Field,
   FieldGroup,
@@ -22,15 +23,7 @@ export function ContactForm() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message }),
-      });
-      const data = (await res.json()) as { message?: string };
-      if (!res.ok) {
-        throw new Error(data.message ?? "Could not send your message");
-      }
+      await httpClient.post("/inquiries", { name, email, subject, message });
       toast.success("Your message has been sent. We'll reply soon.");
       setName("");
       setEmail("");

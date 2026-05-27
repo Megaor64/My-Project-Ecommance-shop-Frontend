@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminStatsBanner } from "@/components/admin/AdminStatsBanner";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 
 export default function AdminLayout({
@@ -8,7 +9,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-parchment text-ink dark:bg-cream">
+    <RouteGuard loginPath="/admin/login" requireAdmin>
+      <div className="min-h-screen bg-parchment text-ink dark:bg-cream">
       <header className="border-b border-border bg-burgundy text-cream">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
@@ -36,6 +38,7 @@ export default function AdminLayout({
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
+      </div>
+    </RouteGuard>
   );
 }

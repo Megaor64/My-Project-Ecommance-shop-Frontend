@@ -8,7 +8,6 @@ import { AuthBootstrap } from "@/features/auth/components/AuthBootstrap";
 import { SettingsBootstrap } from "@/features/settings/components/SettingsBootstrap";
 import { CartBootstrap } from "@/features/cart/components/CartBootstrap";
 import { Toaster } from "@/components/ui/sonner";
-import { getServerUser } from "@/lib/auth-server";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -25,13 +24,11 @@ export const metadata: Metadata = {
   description: "A curated literary bookstore for readers who love the written word.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const initialUser = await getServerUser();
-
   return (
     <html
       lang="en"
@@ -40,7 +37,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-parchment font-lora text-ink">
         <ThemeProvider>
-          <StoreProvider initialUser={initialUser}>
+          <StoreProvider>
             <AuthBootstrap />
             <SettingsBootstrap />
             <CartBootstrap />

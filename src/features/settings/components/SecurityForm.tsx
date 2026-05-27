@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import httpClient from "@/lib/httpClient";
 import {
   Field,
   FieldGroup,
@@ -43,14 +44,7 @@ export function SecurityForm() {
 
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ password }),
-      });
-      const data = (await res.json()) as { message?: string };
-      if (!res.ok) throw new Error(data.message ?? "עדכון נכשל");
+      await httpClient.patch(`/users/${user.id}`, { password });
       setPassword("");
       setConfirmPassword("");
       toast.success("הסיסמה עודכנה");

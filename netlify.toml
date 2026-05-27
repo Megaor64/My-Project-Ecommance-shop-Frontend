@@ -1,0 +1,11 @@
+[build]
+  command = "pnpm build"
+  publish = "out"
+
+# Next.js static export (SPA-ish) needs this
+# so deep links (e.g. /account) resolve to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+

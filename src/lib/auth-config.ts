@@ -1,5 +1,4 @@
-import "server-only";
-import { expressFetch } from "@/lib/auth-server";
+import { getApiBaseUrl } from "@/lib/api";
 
 export type AuthPublicConfig = {
   adminRegisterEnabled: boolean;
@@ -11,7 +10,9 @@ const DEFAULT_CONFIG: AuthPublicConfig = {
 
 export async function fetchAuthPublicConfig(): Promise<AuthPublicConfig> {
   try {
-    const res = await expressFetch("/auth/config", { method: "GET" });
+    const res = await fetch(`${getApiBaseUrl()}/auth/config`, {
+      cache: "no-store",
+    });
     if (!res.ok) return DEFAULT_CONFIG;
 
     const json = (await res.json()) as {

@@ -1,18 +1,29 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { BookCard3D } from "@/components/books/BookCard3D";
 import { Button } from "@/components/ui/button";
-import { fetchProductsServer } from "@/features/products/services/productServer";
+import { fetchProducts } from "@/features/products/store/thunks";
+import {
+  selectBooks,
+  selectProductsError,
+  selectProductsLoading,
+} from "@/features/products/store/selectors";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { cn } from "@/lib/utils";
 
-export async function FeaturedBooks() {
-  let books: Awaited<ReturnType<typeof fetchProductsServer>> = [];
-  let error: string | null = null;
+export function FeaturedBooks() {
+  const dispatch = useAppDispatch();
+  const books = useAppSelector(selectBooks);
+  const loading = useAppSelector(selectProductsLoading);
+  const error = useAppSelector(selectProductsError);
 
-  try {
-    books = await fetchProductsServer();
-  } catch (e) {
-    error = e instanceof Error ? e.message : "Failed to load products";
-  }
+  useEffect(() => {
+    if (books.length === 0) {
+      void dispatch(fetchProducts());
+    }
+  }, [dispatch, books.length]);
 
   const featured = books.slice(0, 4);
 
@@ -37,7 +48,11 @@ export async function FeaturedBooks() {
           </Button>
         </div>
 
-        {error ? (
+        {loading && featured.length === 0 ? (
+          <p className="mt-12 font-lora text-center text-warm-gray">
+            Loading featured books…
+          </p>
+        ) : error ? (
           <p className="mt-12 font-lora text-center text-destructive" role="alert">
             {error}
           </p>

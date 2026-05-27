@@ -1,7 +1,14 @@
-import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
 import httpClient from "@/lib/httpClient";
-import { logout } from "@/features/auth/store/thunks";
+import { clearCredentials } from "@/features/auth/store/slice";
+import {
+  adminVerify2fa,
+  googleAuth,
+  login,
+  logout,
+} from "@/features/auth/store/thunks";
+import { clearAuthToken, setAuthToken } from "@/lib/auth-storage";
 import type { AppDispatch, RootState } from "./index";
 
 export const listenerMiddleware = createListenerMiddleware();
@@ -9,19 +16,11 @@ export const listenerMiddleware = createListenerMiddleware();
 let interceptorsRegistered = false;
 
 export function setupHttpClientAuth(
-  getState: () => RootState,
+  _getState: () => RootState,
   dispatch: AppDispatch
 ) {
   if (interceptorsRegistered) return;
   interceptorsRegistered = true;
-
-  httpClient.interceptors.request.use((config) => {
-    const token = getState().auth.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
 
   httpClient.interceptors.response.use(
     (response) => response,
@@ -43,4 +42,31 @@ export function setupHttpClientAuth(
       return Promise.reject(error);
     }
   );
+
+  listenerMiddleware.startListening({
+    matcher: isAnyOf(
+      login.fulfilled,
+      adminVerify2fa.fulfilled,
+      googleAuth.fulfilled,
+      logout.fulfilled,
+      clearCredentials
+    ),
+    effect: (action) => {
+      if (login.fulfilled.match(action)) {
+        setAuthToken(action.payload.accessToken, action.meta.arg.remember);
+        return;
+      }
+      if (adminVerify2fa.fulfilled.match(action)) {
+        setAuthToken(action.payload.accessToken, action.meta.arg.remember);
+        return;
+      }
+      if (googleAuth.fulfilled.match(action)) {
+        setAuthToken(action.payload.accessToken, action.meta.arg.remember);
+        return;
+      }
+      if (logout.fulfilled.match(action) || clearCredentials.match(action)) {
+        clearAuthToken();
+      }
+    },
+  });
 }
