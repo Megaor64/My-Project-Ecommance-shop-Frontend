@@ -37,9 +37,15 @@ export function VerifyEmailStep({
       await dispatch(resendVerification({ email })).unwrap();
       toast.success("A new verification code was sent to your email.");
     } catch (err) {
-      toast.error(
-        typeof err === "string" ? err : "Could not send verification code"
-      );
+      const message =
+        typeof err === "string" ? err : "Could not send verification code";
+      if (message === "Not found") {
+        toast.error(
+          "Resend is not available on the server yet. Redeploy the backend, or use the code from your registration email."
+        );
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsResending(false);
     }

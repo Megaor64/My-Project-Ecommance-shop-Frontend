@@ -39,9 +39,16 @@ export function VerifyEmailPageClient() {
         await dispatch(resendVerification({ email: targetEmail })).unwrap();
         toast.success("Verification code sent to your email.");
       } catch (err) {
-        toast.error(
-          typeof err === "string" ? err : "Could not send verification code"
-        );
+        const message =
+          typeof err === "string" ? err : "Could not send verification code";
+        // Old API deployments may not have POST /auth/resend-verification yet.
+        if (message === "Not found") {
+          toast.message(
+            "Use the code from your registration email, or click Resend code after the server is updated."
+          );
+          return;
+        }
+        toast.error(message);
       } finally {
         setIsSendingCode(false);
       }
