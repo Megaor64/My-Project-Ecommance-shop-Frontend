@@ -52,11 +52,11 @@ export const createProduct = createAsyncThunk<
 
 export const updateProduct = createAsyncThunk<
   Book,
-  { id: string; body: Record<string, unknown> },
+  { id: string; formData: FormData },
   { rejectValue: string }
->("products/update", async ({ id, body }, { rejectWithValue }) => {
+>("products/update", async ({ id, formData }, { rejectWithValue }) => {
   try {
-    const product = await productService.updateProduct(id, body);
+    const product = await productService.updateProduct(id, formData);
     return mapProductToBook(product);
   } catch (error) {
     return rejectWithValue(getErrorMessage(error, "Failed to update product"));

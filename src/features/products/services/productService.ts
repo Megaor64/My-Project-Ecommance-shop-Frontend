@@ -24,9 +24,12 @@ export async function createProduct(formData: FormData): Promise<ExpressProduct>
 
 export async function updateProduct(
   id: string,
-  body: Record<string, unknown>
+  formData: FormData
 ): Promise<ExpressProduct> {
-  const { data } = await httpClient.patch<ExpressProduct>(`/products/${id}`, body);
+  const { data } = await httpClient.patch<ExpressProduct>(
+    `/products/${id}`,
+    formData
+  );
   return data;
 }
 

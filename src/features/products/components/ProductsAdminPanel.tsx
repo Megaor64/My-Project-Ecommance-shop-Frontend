@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import httpClient from "@/lib/httpClient";
 import { Badge } from "@/components/ui/badge";
@@ -126,7 +127,7 @@ export function ProductsAdminPanel() {
       description: book.description,
       price: String(book.price),
       category: book.genre,
-      stock: "0",
+      stock: String(book.stock),
       isActive: true,
     });
     setImageFile(null);
@@ -162,28 +163,10 @@ export function ProductsAdminPanel() {
     setIsSaving(true);
     try {
       if (editing) {
-        const parsed = productFormSchema.safeParse({
-          name: form.name,
-          description: combinedDescription(),
-          price: form.price,
-          category: form.category,
-          stock: form.stock,
-          isActive: form.isActive,
-        });
-        if (!parsed.success) {
-          throw new Error(parsed.error.issues[0]?.message ?? "Invalid form");
-        }
         await dispatch(
           updateProduct({
             id: editing.id,
-            body: {
-              name: parsed.data.name,
-              description: parsed.data.description,
-              price: parsed.data.price,
-              category: parsed.data.category,
-              stock: parsed.data.stock,
-              isActive: parsed.data.isActive,
-            },
+            formData: buildFormData(),
           })
         ).unwrap();
         toast.success("Product updated.");
@@ -286,7 +269,7 @@ export function ProductsAdminPanel() {
             </DialogTitle>
             <DialogDescription className="font-lora">
               {editing
-                ? "Update fields below. Image upload applies only when creating."
+                ? "Update fields below. Upload a new cover image to replace the current one."
                 : "All fields match the catalog API. Upload a cover image (JPEG, PNG, WebP)."}
             </DialogDescription>
           </DialogHeader>
@@ -361,20 +344,34 @@ export function ProductsAdminPanel() {
                 className="font-lora"
               />
             </Field>
-            {!editing && (
-              <Field>
-                <FieldLabel htmlFor="product-image">Cover image</FieldLabel>
-                <Input
-                  id="product-image"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="font-lora"
-                  onChange={(e) =>
-                    setImageFile(e.target.files?.[0] ?? null)
-                  }
-                />
-              </Field>
-            )}
+            <Field>
+              <FieldLabel htmlFor="product-image">Cover image</FieldLabel>
+              {editing?.coverImage && !imageFile ? (
+                <div className="relative mb-2 h-32 w-24 overflow-hidden rounded-sm border border-border">
+                  <Image
+                    src={editing.coverImage}
+                    alt={`Current cover for ${editing.title}`}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
+                </div>
+              ) : null}
+              <Input
+                id="product-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="font-lora"
+                onChange={(e) =>
+                  setImageFile(e.target.files?.[0] ?? null)
+                }
+              />
+              {editing ? (
+                <p className="mt-1 font-lora text-xs text-warm-gray">
+                  Leave empty to keep the current cover.
+                </p>
+              ) : null}
+            </Field>
             <div className="flex items-center gap-3">
               <Checkbox
                 id="product-active"

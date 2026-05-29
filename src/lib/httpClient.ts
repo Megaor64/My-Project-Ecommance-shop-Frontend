@@ -20,6 +20,10 @@ httpClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Let the browser set multipart boundary; a preset JSON type breaks file uploads.
+  if (config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
+  }
   return config;
 });
 
