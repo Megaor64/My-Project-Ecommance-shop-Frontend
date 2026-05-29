@@ -6,13 +6,27 @@ import type {
   AuthVerifyResponse,
 } from "@/features/auth/types";
 import type { AuthUser } from "@/lib/auth";
+import { isAuthUser, mapExpressUser } from "@/lib/auth";
 import {
   extractAccessToken,
   fetchUserByAccessToken,
 } from "@/lib/auth-client";
 import { clearAuthToken, getAuthToken } from "@/lib/auth-storage";
 
-async function buildLoginResponse(accessToken: string): Promise<AuthLoginResponse> {
+async function buildLoginResponse(
+  data: unknown,
+  accessToken: string
+): Promise<AuthLoginResponse> {
+  if (data && typeof data === "object" && "user" in data) {
+    const userRaw = (data as { user?: Record<string, unknown> }).user;
+    if (userRaw && typeof userRaw === "object") {
+      const user = mapExpressUser(userRaw);
+      if (isAuthUser(user)) {
+        return { user, accessToken };
+      }
+    }
+  }
+
   const user = await fetchUserByAccessToken(accessToken);
   return { user, accessToken };
 }
@@ -30,7 +44,7 @@ export async function login(
   if (!accessToken) {
     throw new Error("Login failed");
   }
-  return buildLoginResponse(accessToken);
+  return buildLoginResponse(data, accessToken);
 }
 
 export async function logout() {
@@ -62,6 +76,13 @@ export async function verifyEmail(email: string, code: string) {
   return { verified: true } satisfies AuthVerifyResponse;
 }
 
+export async function resendVerificationEmail(email: string) {
+  await httpClient.post<{ message?: string }>("/auth/resend-verification", {
+    email,
+  });
+  return { message: "Verification code sent." };
+}
+
 export async function adminLogin(email: string, password: string) {
   await httpClient.post<AdminLoginStep1Response>("/auth/admin/login", {
     email,
@@ -83,7 +104,7 @@ export async function adminVerify2fa(
   if (!accessToken) {
     throw new Error("Invalid verification code");
   }
-  const response = await buildLoginResponse(accessToken);
+  const response = await buildLoginResponse(data, accessToken);
   if (response.user.role !== "admin") {
     throw new Error("Forbidden");
   }
@@ -130,5 +151,5 @@ export async function googleAuth(payload: {
   if (!accessToken) {
     throw new Error("Google sign-in failed");
   }
-  return buildLoginResponse(accessToken);
+  return buildLoginResponse(data, accessToken);
 }

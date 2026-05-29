@@ -17,6 +17,11 @@ import { Label } from "@/components/ui/label";
 import { useAppDispatch } from "@/store/hooks";
 import { login } from "@/features/auth/store/thunks";
 import { syncGuestCart } from "@/features/cart/store/thunks";
+import {
+  isUnverifiedUserError,
+  UNVERIFIED_USER_MESSAGE,
+  verifyEmailPath,
+} from "@/lib/auth-errors";
 import { AdminPortalLinks } from "@/components/auth/AdminPortalLinks";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
@@ -54,7 +59,22 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
       toast.success("Welcome back.");
       router.push(getPostLoginPath(searchParams.get("from")));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Login failed");
+      const message = typeof err === "string" ? err : "Login failed";
+      if (isUnverifiedUserError(message) && email.trim()) {
+        toast.error(
+          <span className="font-lora">
+            {UNVERIFIED_USER_MESSAGE}{" "}
+            <Link
+              href={verifyEmailPath(email.trim())}
+              className="font-semibold text-gold underline underline-offset-4 hover:opacity-90"
+            >
+              Verify your email
+            </Link>
+          </span>
+        );
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsSubmitting(false);
     }

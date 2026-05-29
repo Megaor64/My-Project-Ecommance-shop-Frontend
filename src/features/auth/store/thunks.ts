@@ -83,6 +83,20 @@ export const verifyEmail = createAsyncThunk<
   }
 });
 
+export const resendVerification = createAsyncThunk<
+  void,
+  { email: string },
+  { rejectValue: string }
+>("auth/resendVerification", async (body, { rejectWithValue }) => {
+  try {
+    await authService.resendVerificationEmail(body.email);
+  } catch (error) {
+    return rejectWithValue(
+      getErrorMessage(error, "Could not send verification code")
+    );
+  }
+});
+
 export const adminLogin = createAsyncThunk<
   void,
   { email: string; password: string },

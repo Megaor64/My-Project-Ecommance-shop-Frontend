@@ -14,7 +14,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { verifyEmail } from "@/features/auth/store/thunks";
+import { resendVerification, verifyEmail } from "@/features/auth/store/thunks";
 import { useAppDispatch } from "@/store/hooks";
 
 type VerifyEmailStepProps = {
@@ -29,6 +29,21 @@ export function VerifyEmailStep({
   const dispatch = useAppDispatch();
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  async function handleResend() {
+    setIsResending(true);
+    try {
+      await dispatch(resendVerification({ email })).unwrap();
+      toast.success("A new verification code was sent to your email.");
+    } catch (err) {
+      toast.error(
+        typeof err === "string" ? err : "Could not send verification code"
+      );
+    } finally {
+      setIsResending(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,6 +82,15 @@ export function VerifyEmailStep({
         </Field>
         <Button type="submit" className="w-full rounded-md" disabled={isSubmitting}>
           {isSubmitting ? "Verifying…" : "Verify email"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full rounded-md"
+          disabled={isResending || isSubmitting}
+          onClick={() => void handleResend()}
+        >
+          {isResending ? "Sending code…" : "Resend code"}
         </Button>
       </FieldGroup>
     </form>
