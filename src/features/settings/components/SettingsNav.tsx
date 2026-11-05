@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT, type TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const links = [
-  { href: "/account/settings/appearance", label: "עיצוב" },
-  { href: "/account/settings/notifications", label: "התראות" },
-  { href: "/account/settings/security", label: "אבטחה" },
-] as const;
+const links: { href: string; labelKey: TranslationKey }[] = [
+  { href: "/account/settings/appearance", labelKey: "settings.nav.appearance" },
+  {
+    href: "/account/settings/notifications",
+    labelKey: "settings.nav.notifications",
+  },
+  { href: "/account/settings/security", labelKey: "settings.nav.security" },
+];
 
 export function SettingsNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav className="flex flex-col gap-1 font-lora text-sm">
@@ -28,7 +33,7 @@ export function SettingsNav() {
                 : "text-warm-gray hover:bg-muted hover:text-ink"
             )}
           >
-            {link.label}
+            {t(link.labelKey)}
           </Link>
         );
       })}

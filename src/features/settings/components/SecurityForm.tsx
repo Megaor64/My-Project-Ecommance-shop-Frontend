@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input";
 import { selectUser } from "@/features/auth/store/selectors";
 import { logout } from "@/features/auth/store/thunks";
 import { deleteAccount } from "@/features/settings/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export function SecurityForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const t = useT();
   const user = useAppSelector(selectUser);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,15 +32,15 @@ export function SecurityForm() {
     if (!user) return;
 
     if (!password) {
-      toast.message("הזן סיסמה חדשה");
+      toast.message(t("settings.security.enterPassword"));
       return;
     }
     if (password.length < 8) {
-      toast.error("הסיסמה חייבת להכיל לפחות 8 תווים");
+      toast.error(t("settings.security.tooShort"));
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("הסיסמאות אינן תואמות");
+      toast.error(t("settings.security.mismatch"));
       return;
     }
 
@@ -47,9 +49,11 @@ export function SecurityForm() {
       await httpClient.patch(`/users/${user.id}`, { password });
       setPassword("");
       setConfirmPassword("");
-      toast.success("הסיסמה עודכנה");
+      toast.success(t("settings.security.updated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "עדכון נכשל");
+      toast.error(
+        err instanceof Error ? err.message : t("settings.security.updateFailed")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -57,11 +61,7 @@ export function SecurityForm() {
 
   async function handleDeleteAccount() {
     if (!user) return;
-    if (
-      !confirm(
-        "למחוק את החשבון לצמיתות? פעולה זו אינה ניתנת לביטול."
-      )
-    ) {
+    if (!confirm(t("settings.security.deleteConfirm"))) {
       return;
     }
 
@@ -70,9 +70,11 @@ export function SecurityForm() {
       await dispatch(deleteAccount(user.id)).unwrap();
       await dispatch(logout()).unwrap();
       router.replace("/");
-      toast.success("החשבון נמחק");
+      toast.success(t("settings.security.deleted"));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "מחיקת החשבון נכשלה");
+      toast.error(
+        typeof err === "string" ? err : t("settings.security.deleteFailed")
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -81,10 +83,14 @@ export function SecurityForm() {
   return (
     <div className="space-y-10">
       <form onSubmit={(e) => void handlePasswordSubmit(e)}>
-        <h2 className="font-playfair text-lg text-ink">שינוי סיסמה</h2>
+        <h2 className="font-playfair text-lg text-ink">
+          {t("settings.security.changePassword")}
+        </h2>
         <FieldGroup className="mt-4">
           <Field>
-            <FieldLabel htmlFor="new-password">סיסמה חדשה</FieldLabel>
+            <FieldLabel htmlFor="new-password">
+              {t("settings.security.newPassword")}
+            </FieldLabel>
             <Input
               id="new-password"
               type="password"
@@ -96,7 +102,9 @@ export function SecurityForm() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="confirm-password">אימות סיסמה</FieldLabel>
+            <FieldLabel htmlFor="confirm-password">
+              {t("settings.security.confirmPassword")}
+            </FieldLabel>
             <Input
               id="confirm-password"
               type="password"
@@ -107,15 +115,17 @@ export function SecurityForm() {
             />
           </Field>
           <Button type="submit" className="rounded-md" disabled={isSaving}>
-            {isSaving ? "שומר…" : "עדכן סיסמה"}
+            {isSaving ? t("common.saving") : t("settings.security.update")}
           </Button>
         </FieldGroup>
       </form>
 
       <section className="rounded-md border border-destructive/30 bg-destructive/5 p-4">
-        <h2 className="font-playfair text-lg text-destructive">מחיקת חשבון</h2>
+        <h2 className="font-playfair text-lg text-destructive">
+          {t("settings.security.deleteTitle")}
+        </h2>
         <p className="mt-2 font-lora text-sm text-warm-gray">
-          כל הנתונים וההגדרות יימחקו לצמיתות.
+          {t("settings.security.deleteWarning")}
         </p>
         <Button
           type="button"
@@ -124,7 +134,9 @@ export function SecurityForm() {
           disabled={isDeleting}
           onClick={() => void handleDeleteAccount()}
         >
-          {isDeleting ? "מוחק…" : "מחק חשבון"}
+          {isDeleting
+            ? t("settings.security.deleting")
+            : t("settings.security.deleteButton")}
         </Button>
       </section>
     </div>

@@ -12,7 +12,7 @@ export default function StoreLayout({
     <SearchProvider>
       <Navbar />
       <StoreSearchChrome />
-      <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
+      <main className="min-h-[100svh] min-w-0 flex-1 overflow-x-clip">{children}</main>
       <Footer />
     </SearchProvider>
   );

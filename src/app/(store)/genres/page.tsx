@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { T } from "@/components/i18n/T";
 import { GenresPageClient } from "@/features/products/components/GenresPageClient";
 
 export const metadata: Metadata = {
@@ -12,15 +13,15 @@ export default function GenresPage() {
     <div className="mx-auto max-w-6xl px-4 py-12 md:py-14">
       <header className="mb-10">
         <h1 className="font-playfair text-3xl font-semibold text-ink md:text-4xl">
-          Genres
+          <T k="genres.title" />
         </h1>
         <p className="mt-2 font-lora text-warm-gray">
-          Wander by mood — search by title, author, or genre, and set a maximum price.
+          <T k="genres.subtitle" />
         </p>
       </header>
       <Suspense
         fallback={
-          <p className="font-lora text-center text-warm-gray">Loading genres…</p>
+          <p className="font-lora text-center text-warm-gray"><T k="genres.loading" /></p>
         }
       >
         <GenresPageClient initialBooks={[]} />

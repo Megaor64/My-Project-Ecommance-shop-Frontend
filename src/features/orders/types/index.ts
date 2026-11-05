@@ -31,8 +31,9 @@ export type Order = {
   };
 };
 
-export function formatOrderDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+/** `locale` comes from `useLocale().locale` (defaults to English). */
+export function formatOrderDate(iso: string, locale = "en-US"): string {
+  return new Date(iso).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

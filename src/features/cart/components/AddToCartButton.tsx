@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Book } from "@/features/products/types";
 import { addToCart } from "@/features/cart/store/thunks";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 import { cn } from "@/lib/utils";
 
@@ -16,15 +17,16 @@ type AddToCartButtonProps = {
 
 export function AddToCartButton({ book, className, compact }: AddToCartButtonProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
 
   async function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     try {
       await dispatch(addToCart({ book })).unwrap();
-      toast.success(`Added "${book.title}" to your bag`);
+      toast.success(t("book.addedToBag", { title: book.title }));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not add to cart");
+      toast.error(typeof err === "string" ? err : t("book.addFailed"));
     }
   }
 
@@ -39,8 +41,8 @@ export function AddToCartButton({ book, className, compact }: AddToCartButtonPro
       )}
       onClick={handleClick}
     >
-      <ShoppingBag className="mr-2 size-4" />
-      Add to bag
+      <ShoppingBag className="me-2 size-4" />
+      {t("book.addToBag")}
     </Button>
   );
 }

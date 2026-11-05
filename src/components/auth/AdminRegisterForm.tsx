@@ -16,9 +16,11 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { useT } from "@/lib/i18n";
 
 export function AdminRegisterForm() {
   const router = useRouter();
+  const t = useT();
   const [step, setStep] = useState<"register" | "verify">("register");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -28,22 +30,22 @@ export function AdminRegisterForm() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (adminPass.length < 8) {
-      toast.error("Admin secret must be at least 8 characters.");
+      toast.error(t("staff.secretTooShort"));
       return;
     }
     if (!adminPass) {
-      toast.error("Admin secret is required.");
+      toast.error(t("staff.secretRequired"));
       return;
     }
 
     setIsSubmitting(true);
     try {
       const data = await adminRegister({ name, email, adminPass });
-      toast.success("Check your email for a verification code.");
+      toast.success(t("auth.checkEmailForCode"));
       setEmail(data.email ?? email);
       setStep("verify");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Registration failed");
+      toast.error(err instanceof Error ? err.message : t("auth.registrationFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -53,8 +55,8 @@ export function AdminRegisterForm() {
     return (
       <AuthShell
         variant="admin"
-        title="Verify staff email"
-        subtitle="Enter the code we sent to complete registration."
+        title={t("staff.verifyTitle")}
+        subtitle={t("verify.subtitleRegister")}
       >
         <VerifyEmailStep
           email={email}
@@ -62,7 +64,7 @@ export function AdminRegisterForm() {
         />
         <p className="mt-6 text-center font-lora text-sm text-warm-gray">
           <Link href="/admin/login" className="text-gold hover:underline">
-            Back to staff sign in
+            {t("staff.backToSignIn")}
           </Link>
         </p>
       </AuthShell>
@@ -72,13 +74,13 @@ export function AdminRegisterForm() {
   return (
     <AuthShell
       variant="admin"
-      title="Register staff"
-      subtitle="Create an admin account with the shared secret."
+      title={t("staff.registerTitle")}
+      subtitle={t("staff.registerSubtitle")}
     >
       <form onSubmit={handleRegister}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="admin-name">Name</FieldLabel>
+            <FieldLabel htmlFor="admin-name">{t("common.name")}</FieldLabel>
             <Input
               id="admin-name"
               required
@@ -87,7 +89,7 @@ export function AdminRegisterForm() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="admin-reg-email">Email</FieldLabel>
+            <FieldLabel htmlFor="admin-reg-email">{t("common.email")}</FieldLabel>
             <Input
               id="admin-reg-email"
               type="email"
@@ -97,7 +99,7 @@ export function AdminRegisterForm() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="admin-secret">Admin secret</FieldLabel>
+            <FieldLabel htmlFor="admin-secret">{t("staff.adminSecret")}</FieldLabel>
             <Input
               id="admin-secret"
               type="password"
@@ -106,7 +108,7 @@ export function AdminRegisterForm() {
               onChange={(e) => setAdminPass(e.target.value)}
             />
             <FieldDescription>
-              Staff registration secret required by your administrator.
+              {t("staff.adminSecretHint")}
             </FieldDescription>
           </Field>
           <GoogleSignInButton
@@ -115,7 +117,7 @@ export function AdminRegisterForm() {
             showDivider={false}
             disabled={isSubmitting || adminPass.length < 8}
             onSuccess={async () => {
-              toast.success("Staff account created. You can sign in now.");
+              toast.success(t("staff.accountCreated"));
               router.push("/admin/login");
             }}
           />
@@ -124,13 +126,13 @@ export function AdminRegisterForm() {
             className="w-full rounded-md"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Registering…" : "Register staff account"}
+            {isSubmitting ? t("staff.registering") : t("staff.registerSubmit")}
           </Button>
         </FieldGroup>
       </form>
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
         <Link href="/admin/login" className="text-gold hover:underline">
-          Staff sign in
+          {t("staff.signInLink")}
         </Link>
       </p>
     </AuthShell>

@@ -7,6 +7,7 @@ import type { UserSettings } from "@/features/settings/types";
 import { selectSettings, selectSettingsStatus } from "@/features/settings/store/selectors";
 import { hydrateSettings } from "@/features/settings/store/slice";
 import { fetchSettings } from "@/features/settings/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type SettingsPageClientProps = {
@@ -21,6 +22,7 @@ export function SettingsPageClient({
   children,
 }: SettingsPageClientProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const router = useRouter();
   const user = useAppSelector(selectUser);
   const isLoading = useAppSelector(selectAuthLoading);
@@ -42,7 +44,7 @@ export function SettingsPageClient({
   }, [dispatch, initialSettings, user]);
 
   if (isLoading || (user && settingsStatus === "loading" && !settings)) {
-    return <p className="font-lora text-warm-gray">טוען…</p>;
+    return <p className="font-lora text-warm-gray">{t("common.loading")}</p>;
   }
 
   if (!user) return null;

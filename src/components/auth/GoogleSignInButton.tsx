@@ -7,6 +7,7 @@ import { isGoogleAuthConfigured } from "@/components/auth/AuthGoogleProvider";
 import type { AuthLoginResponse } from "@/features/auth/types";
 import { googleAuth } from "@/features/auth/store/thunks";
 import type { GoogleAuthIntent } from "@/features/auth/services/authService";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 
 type GoogleSignInButtonProps = {
@@ -19,6 +20,7 @@ type GoogleSignInButtonProps = {
 };
 
 function AuthDivider() {
+  const t = useT();
   return (
     <div className="relative my-6">
       <div className="absolute inset-0 flex items-center" aria-hidden>
@@ -26,7 +28,7 @@ function AuthDivider() {
       </div>
       <div className="relative flex justify-center">
         <span className="bg-cream px-3 font-lora text-xs uppercase tracking-wide text-warm-gray">
-          or continue with email
+          {t("auth.orContinueWithEmail")}
         </span>
       </div>
     </div>
@@ -42,6 +44,7 @@ export function GoogleSignInButton({
   onSuccess,
 }: GoogleSignInButtonProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isGoogleAuthConfigured()) {
@@ -51,7 +54,7 @@ export function GoogleSignInButton({
   async function handleSuccess(credentialResponse: CredentialResponse) {
     const idToken = credentialResponse.credential;
     if (!idToken) {
-      toast.error("Google sign-in failed. Please try again.");
+      toast.error(t("auth.googleFailed"));
       return;
     }
 
@@ -67,7 +70,7 @@ export function GoogleSignInButton({
       ).unwrap();
       await onSuccess?.(result);
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Google sign-in failed");
+      toast.error(typeof err === "string" ? err : t("auth.googleFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +86,7 @@ export function GoogleSignInButton({
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={() => {
-            toast.error("Google sign-in was cancelled or failed.");
+            toast.error(t("auth.googleCancelled"));
           }}
           useOneTap={false}
           theme="outline"

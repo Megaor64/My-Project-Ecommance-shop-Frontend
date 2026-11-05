@@ -1,4 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
+import {
+  adminVerify2fa,
+  demoLogin,
+  fetchMe,
+  googleAuth,
+  login,
+  logout,
+} from "@/features/auth/store/thunks";
+import { clearCredentials } from "@/features/auth/store/slice";
 import type { AdminUser, UserSettings } from "@/features/settings/types";
 import {
   deleteAccount,
@@ -29,6 +38,21 @@ export const initialSettingsState: SettingsState = {
   adminUsers: [],
   adminUsersStatus: "idle",
 };
+
+function resetSettings(state: SettingsState) {
+  state.settings = null;
+  state.status = "idle";
+  state.saveStatus = "idle";
+  state.error = null;
+  state.adminUsers = [];
+  state.adminUsersStatus = "idle";
+}
+
+function resetIfOtherUser(state: SettingsState, userId: string) {
+  if (state.settings && String(state.settings.userId) !== String(userId)) {
+    resetSettings(state);
+  }
+}
 
 const settingsSlice = createSlice({
   name: "settings",
@@ -83,10 +107,25 @@ const settingsSlice = createSlice({
         state.error = action.payload ?? "Failed to update notifications";
       })
 
-      .addCase(deleteAccount.fulfilled, (state) => {
-        state.settings = null;
-        state.status = "idle";
-      })
+      .addCase(deleteAccount.fulfilled, resetSettings)
+
+      // Do not leak one account's settings to the next one in this browser.
+      .addCase(logout.fulfilled, resetSettings)
+      .addCase(logout.rejected, resetSettings)
+      .addCase(clearCredentials, resetSettings)
+      .addCase(fetchMe.rejected, resetSettings)
+      .addCase(login.fulfilled, (state, action) =>
+        resetIfOtherUser(state, action.payload.user.id)
+      )
+      .addCase(adminVerify2fa.fulfilled, (state, action) =>
+        resetIfOtherUser(state, action.payload.user.id)
+      )
+      .addCase(googleAuth.fulfilled, (state, action) =>
+        resetIfOtherUser(state, action.payload.user.id)
+      )
+      .addCase(demoLogin.fulfilled, (state, action) =>
+        resetIfOtherUser(state, action.payload.user.id)
+      )
 
       .addCase(fetchAllUsers.pending, (state) => {
         state.adminUsersStatus = "loading";

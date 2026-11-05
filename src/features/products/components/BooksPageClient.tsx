@@ -9,6 +9,7 @@ import {
   selectProductsError,
   selectProductsLoading,
 } from "@/features/products/store/selectors";
+import { useT } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
 
 type BooksPageClientProps = {
@@ -17,6 +18,7 @@ type BooksPageClientProps = {
 
 export function BooksPageClient({ initialBooks }: BooksPageClientProps) {
   useSyncSearchFromUrl();
+  const t = useT();
   useHydrateProducts(initialBooks);
   const books = useAppSelector(selectBooks);
   const loading = useAppSelector(selectProductsLoading);
@@ -25,7 +27,7 @@ export function BooksPageClient({ initialBooks }: BooksPageClientProps) {
 
   if (loading && displayBooks.length === 0) {
     return (
-      <p className="font-lora text-center text-warm-gray">Loading the collection…</p>
+      <p className="font-lora text-center text-warm-gray">{t("books.loading")}</p>
     );
   }
 

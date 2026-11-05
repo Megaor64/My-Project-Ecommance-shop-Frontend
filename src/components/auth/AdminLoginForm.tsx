@@ -25,6 +25,7 @@ import { DemoLoginButton } from "@/components/auth/DemoLoginButton";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { adminLogin, adminVerify2fa } from "@/features/auth/store/thunks";
 import { syncGuestCart } from "@/features/cart/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 
 type AdminLoginFormProps = {
@@ -36,6 +37,7 @@ export function AdminLoginForm({
 }: AdminLoginFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useT();
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,10 +50,10 @@ export function AdminLoginForm({
     setIsSubmitting(true);
     try {
       await dispatch(adminLogin({ email, password })).unwrap();
-      toast.success("Verification code sent to your email.");
+      toast.success(t("staff.codeSent"));
       setStep("otp");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Login failed");
+      toast.error(typeof err === "string" ? err : t("auth.loginFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +62,7 @@ export function AdminLoginForm({
   async function handleOtp(e: React.FormEvent) {
     e.preventDefault();
     if (code.length !== 6) {
-      toast.error("Enter the 6-digit code from your email.");
+      toast.error(t("verify.enterCode"));
       return;
     }
 
@@ -70,10 +72,10 @@ export function AdminLoginForm({
         adminVerify2fa({ email, code, remember })
       ).unwrap();
       await dispatch(syncGuestCart()).unwrap().catch(() => undefined);
-      toast.success("Welcome, staff.");
+      toast.success(t("staff.welcome"));
       router.push("/admin/inquiries");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Login failed");
+      toast.error(typeof err === "string" ? err : t("auth.loginFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -82,11 +84,13 @@ export function AdminLoginForm({
   return (
     <AuthShell
       variant="admin"
-      title={step === "credentials" ? "Staff sign in" : "Enter verification code"}
+      title={
+        step === "credentials" ? t("staff.signIn") : t("staff.enterCode")
+      }
       subtitle={
         step === "credentials"
-          ? "Step 1 of 2 — your admin credentials"
-          : `Step 2 of 2 — code sent to ${email}`
+          ? t("staff.step1")
+          : t("staff.step2", { email })
       }
     >
       {step === "credentials" ? (
@@ -97,14 +101,14 @@ export function AdminLoginForm({
             disabled={isSubmitting}
             onSuccess={async () => {
               await dispatch(syncGuestCart()).unwrap().catch(() => undefined);
-              toast.success("Welcome, staff.");
+              toast.success(t("staff.welcome"));
               router.push("/admin/inquiries");
             }}
           />
           <form onSubmit={handleCredentials}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="admin-email">Email</FieldLabel>
+              <FieldLabel htmlFor="admin-email">{t("common.email")}</FieldLabel>
               <Input
                 id="admin-email"
                 type="email"
@@ -114,7 +118,7 @@ export function AdminLoginForm({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="admin-password">Password</FieldLabel>
+              <FieldLabel htmlFor="admin-password">{t("common.password")}</FieldLabel>
               <Input
                 id="admin-password"
                 type="password"
@@ -128,7 +132,7 @@ export function AdminLoginForm({
               className="w-full rounded-md"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Sending code…" : "Continue"}
+              {isSubmitting ? t("verify.sendingCode") : t("staff.continue")}
             </Button>
           </FieldGroup>
         </form>
@@ -137,8 +141,8 @@ export function AdminLoginForm({
         <form onSubmit={handleOtp}>
           <FieldGroup>
             <Field>
-              <FieldLabel>One-time code</FieldLabel>
-              <FieldDescription>Enter the 6-digit code from your inbox.</FieldDescription>
+              <FieldLabel>{t("staff.otpLabel")}</FieldLabel>
+              <FieldDescription>{t("staff.otpDescription")}</FieldDescription>
               <InputOTP maxLength={6} value={code} onChange={setCode}>
                 <InputOTPGroup>
                   {Array.from({ length: 6 }).map((_, i) => (
@@ -154,7 +158,7 @@ export function AdminLoginForm({
                 onCheckedChange={(v) => setRemember(v === true)}
               />
               <Label htmlFor="admin-remember" className="font-lora text-sm font-normal">
-                Remember me
+                {t("auth.rememberMe")}
               </Label>
             </div>
             <Button
@@ -162,7 +166,7 @@ export function AdminLoginForm({
               className="w-full rounded-md"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Signing in…" : "Sign in"}
+              {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
             </Button>
             <Button
               type="button"
@@ -170,7 +174,7 @@ export function AdminLoginForm({
               className="w-full rounded-md"
               onClick={() => setStep("credentials")}
             >
-              Back
+              {t("common.back")}
             </Button>
           </FieldGroup>
         </form>
@@ -178,7 +182,7 @@ export function AdminLoginForm({
       <DemoLoginButton />
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
         <Link href="/login" className="text-gold hover:underline">
-          Customer sign in
+          {t("staff.customerSignIn")}
         </Link>
       </p>
       {showAdminRegister ? (

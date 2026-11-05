@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT, type TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function isNavLinkActive(pathname: string, href: string): boolean {
@@ -9,16 +10,17 @@ function isNavLinkActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/books", label: "Books" },
-  { href: "/genres", label: "Genres" },
-  { href: "/about", label: "About" },
-  { href: "/account", label: "Account" },
+const links: { href: string; labelKey: TranslationKey }[] = [
+  { href: "/", labelKey: "nav.home" },
+  { href: "/books", labelKey: "nav.books" },
+  { href: "/genres", labelKey: "nav.genres" },
+  { href: "/about", labelKey: "nav.about" },
+  { href: "/account", labelKey: "nav.account" },
 ];
 
 export function NavLinks({ className }: { className?: string }) {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav
@@ -26,7 +28,7 @@ export function NavLinks({ className }: { className?: string }) {
         "flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-x-5 xl:gap-6",
         className
       )}
-      aria-label="Main"
+      aria-label={t("nav.main")}
     >
       {links.map((link) => {
         const active = isNavLinkActive(pathname, link.href);
@@ -41,7 +43,7 @@ export function NavLinks({ className }: { className?: string }) {
                 : "text-ink hover:text-gold"
             )}
           >
-            {link.label}
+            {t(link.labelKey)}
           </Link>
         );
       })}

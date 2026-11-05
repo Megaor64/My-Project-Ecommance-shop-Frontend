@@ -10,10 +10,12 @@ import {
   selectProductsError,
   selectProductsLoading,
 } from "@/features/products/store/selectors";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export function HeroSection() {
   const dispatch = useAppDispatch();
+  const t = useT();
   const heroBooks = useAppSelector(selectHeroBooks);
   const loading = useAppSelector(selectProductsLoading);
   const error = useAppSelector(selectProductsError);
@@ -36,38 +38,37 @@ export function HeroSection() {
       <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 md:grid-cols-2 md:py-24 lg:gap-16">
         <div className="animate-fade-in-up flex flex-col justify-center">
           <p className="font-lora text-sm uppercase tracking-[0.25em] text-gold">
-            Literary Bookstore
+            {t("hero.eyebrow")}
           </p>
           <h1 className="mt-4 font-playfair text-4xl font-semibold leading-tight text-ink md:text-5xl lg:text-6xl">
-            Stories worth
-            <span className="block text-burgundy">slowing down for</span>
+            {t("hero.titleLine1")}
+            <span className="block text-burgundy">{t("hero.titleLine2")}</span>
           </h1>
           <p className="mt-6 max-w-md font-lora text-base leading-relaxed text-warm-gray">
-            Curated fiction, poetry, and essays chosen for readers who linger
-            over language and leave with arms full of possibility.
+            {t("hero.body")}
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Button asChild className="rounded-md font-lora normal-case tracking-normal">
-              <Link href="/books">Browse the shelves</Link>
+              <Link href="/books">{t("hero.browse")}</Link>
             </Button>
             <Button
               asChild
               variant="outline"
               className="rounded-md border-ink/20 font-lora normal-case tracking-normal"
             >
-              <Link href="/register">Join Folio</Link>
+              <Link href="/register">{t("hero.join")}</Link>
             </Button>
           </div>
         </div>
         <div className="relative -mx-4 flex max-w-[100vw] items-center justify-start gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:max-w-none sm:justify-center sm:gap-4 sm:overflow-visible sm:pb-0 md:gap-6">
           {loading && heroBooks.length === 0 ? (
-            <p className="font-lora text-sm text-warm-gray">Loading featured books…</p>
+            <p className="font-lora text-sm text-warm-gray">{t("hero.loading")}</p>
           ) : error && heroBooks.length === 0 ? (
             <p className="font-lora text-sm text-destructive" role="alert">
               {error}
             </p>
           ) : heroBooks.length === 0 ? (
-            <p className="font-lora text-sm text-warm-gray">No books in the catalog yet.</p>
+            <p className="font-lora text-sm text-warm-gray">{t("hero.empty")}</p>
           ) : (
             heroBooks.map((book, i) => (
               <div

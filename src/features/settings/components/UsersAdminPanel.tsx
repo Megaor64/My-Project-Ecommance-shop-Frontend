@@ -22,10 +22,12 @@ import {
   updatePermissions,
   updateUserRole,
 } from "@/features/settings/store/thunks";
+import { useT, type TranslationKey } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export function UsersAdminPanel() {
   const dispatch = useAppDispatch();
+  const t = useT();
   const users = useAppSelector(selectAdminUsers);
   const status = useAppSelector(selectAdminUsersStatus);
 
@@ -33,9 +35,9 @@ export function UsersAdminPanel() {
     try {
       await dispatch(fetchAllUsers()).unwrap();
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not load users.");
+      toast.error(typeof err === "string" ? err : t("admin.users.loadFailed"));
     }
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   useEffect(() => {
     void loadUsers();
@@ -44,10 +46,10 @@ export function UsersAdminPanel() {
   async function handleRoleChange(userId: string, role: "customer" | "admin") {
     try {
       await dispatch(updateUserRole({ userId, role })).unwrap();
-      toast.success("Role updated.");
+      toast.success(t("admin.users.roleUpdated"));
       void loadUsers();
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not update role.");
+      toast.error(typeof err === "string" ? err : t("admin.users.roleFailed"));
     }
   }
 
@@ -56,35 +58,43 @@ export function UsersAdminPanel() {
       await dispatch(
         updatePermissions({ userId, permissions: { canSell } })
       ).unwrap();
-      toast.success("Permissions updated.");
+      toast.success(t("admin.users.permissionsUpdated"));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not update permissions.");
+      toast.error(
+        typeof err === "string" ? err : t("admin.users.permissionsFailed")
+      );
     }
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-playfair text-2xl text-ink">Users</h1>
+        <h1 className="font-playfair text-2xl text-ink">
+          {t("admin.users.title")}
+        </h1>
         <p className="mt-1 font-lora text-sm text-warm-gray">
-          Manage roles and seller permissions.
+          {t("admin.users.subtitle")}
         </p>
       </div>
 
       {status === "loading" ? (
-        <p className="font-lora text-sm text-warm-gray">Loading users…</p>
+        <p className="font-lora text-sm text-warm-gray">
+          {t("admin.users.loading")}
+        </p>
       ) : users.length === 0 ? (
-        <p className="font-lora text-sm text-warm-gray">No users found.</p>
+        <p className="font-lora text-sm text-warm-gray">
+          {t("admin.users.empty")}
+        </p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Verified</TableHead>
-              <TableHead>Can sell</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("common.name")}</TableHead>
+              <TableHead>{t("common.email")}</TableHead>
+              <TableHead>{t("common.role")}</TableHead>
+              <TableHead>{t("common.verified")}</TableHead>
+              <TableHead>{t("admin.users.canSell")}</TableHead>
+              <TableHead className="text-end">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,14 +104,14 @@ export function UsersAdminPanel() {
                 <TableCell>{u.email}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className="font-lora capitalize">
-                    {u.role}
+                    {t(`admin.users.role.${u.role}` as TranslationKey)}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   {u.isVerified ? (
-                    <span className="text-sage">Yes</span>
+                    <span className="text-sage">{t("common.yes")}</span>
                   ) : (
-                    <span className="text-warm-gray">No</span>
+                    <span className="text-warm-gray">{t("common.no")}</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -111,10 +121,10 @@ export function UsersAdminPanel() {
                     onCheckedChange={(checked) =>
                       void handleCanSellChange(u._id, checked)
                     }
-                    aria-label={`Can sell for ${u.name}`}
+                    aria-label={t("admin.users.canSellFor", { name: u.name })}
                   />
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-end">
                   {u.role === "admin" ? (
                     <Button
                       type="button"
@@ -123,7 +133,7 @@ export function UsersAdminPanel() {
                       className="font-lora"
                       onClick={() => void handleRoleChange(u._id, "customer")}
                     >
-                      Make customer
+                      {t("admin.users.makeCustomer")}
                     </Button>
                   ) : (
                     <Button
@@ -133,7 +143,7 @@ export function UsersAdminPanel() {
                       className="font-lora"
                       onClick={() => void handleRoleChange(u._id, "admin")}
                     >
-                      Make admin
+                      {t("admin.users.makeAdmin")}
                     </Button>
                   )}
                 </TableCell>

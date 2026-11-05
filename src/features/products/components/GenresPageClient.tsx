@@ -10,6 +10,7 @@ import {
   selectBooks,
   selectProductsError,
 } from "@/features/products/store/selectors";
+import { useT } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
 
 type GenresPageClientProps = {
@@ -18,6 +19,7 @@ type GenresPageClientProps = {
 
 export function GenresPageClient({ initialBooks }: GenresPageClientProps) {
   useSyncSearchFromUrl();
+  const t = useT();
   const { filter } = useSearch();
   useHydrateProducts(initialBooks);
   const books = useAppSelector(selectBooks);
@@ -39,8 +41,8 @@ export function GenresPageClient({ initialBooks }: GenresPageClientProps) {
     return (
       <p className="font-lora text-center text-warm-gray">
         {displayBooks.length === 0
-          ? "No genres to display yet."
-          : "No books match your search. Try adjusting filters."}
+          ? t("genres.empty")
+          : t("books.noMatch")}
       </p>
     );
   }

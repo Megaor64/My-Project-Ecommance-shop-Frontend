@@ -1,5 +1,4 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
 import type {
   AppearanceSettings,
   NotificationSettings,
@@ -8,52 +7,49 @@ import type {
 } from "@/features/settings/types";
 import type { AdminUser } from "@/features/settings/types";
 import * as settingsService from "@/features/settings/services/settingsService";
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    return axiosError.response?.data?.message ?? fallback;
-  }
-  if (error instanceof Error) return error.message;
-  return fallback;
-}
+import { rejectMessage } from "@/lib/i18n";
+import type { RootState } from "@/store";
 
 export const fetchSettings = createAsyncThunk<
   UserSettings,
   string,
-  { rejectValue: string }
->("settings/fetch", async (userId, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/fetch", async (userId, { getState, rejectWithValue }) => {
   try {
     return await settingsService.fetchSettings(userId);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to load settings"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "settings.loadFailed")
+    );
   }
 });
 
 export const updateAppearance = createAsyncThunk<
   UserSettings,
   { userId: string; appearance: AppearanceSettings },
-  { rejectValue: string }
->("settings/updateAppearance", async ({ userId, appearance }, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/updateAppearance", async ({ userId, appearance }, { getState, rejectWithValue }) => {
   try {
     return await settingsService.updateAppearance(userId, appearance);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to update appearance"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "settings.saveFailed")
+    );
   }
 });
 
 export const updateNotifications = createAsyncThunk<
   UserSettings,
   { userId: string; notifications: NotificationSettings },
-  { rejectValue: string }
+  { state: RootState; rejectValue: string }
 >(
   "settings/updateNotifications",
-  async ({ userId, notifications }, { rejectWithValue }) => {
+  async ({ userId, notifications }, { getState, rejectWithValue }) => {
     try {
       return await settingsService.updateNotifications(userId, notifications);
     } catch (error) {
       return rejectWithValue(
-        getErrorMessage(error, "Failed to update notifications")
+        rejectMessage(error, getState(), "settings.saveFailed")
       );
     }
   }
@@ -62,47 +58,55 @@ export const updateNotifications = createAsyncThunk<
 export const updatePermissions = createAsyncThunk<
   UserSettings,
   { userId: string; permissions: Partial<PermissionSettings> },
-  { rejectValue: string }
->("settings/updatePermissions", async ({ userId, permissions }, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/updatePermissions", async ({ userId, permissions }, { getState, rejectWithValue }) => {
   try {
     return await settingsService.updatePermissions(userId, permissions);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to update permissions"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.users.permissionsFailed")
+    );
   }
 });
 
 export const updateUserRole = createAsyncThunk<
   { user: AdminUser; settings: UserSettings },
   { userId: string; role: "customer" | "admin" },
-  { rejectValue: string }
->("settings/updateUserRole", async ({ userId, role }, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/updateUserRole", async ({ userId, role }, { getState, rejectWithValue }) => {
   try {
     return await settingsService.updateUserRole(userId, role);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to update role"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.users.roleFailed")
+    );
   }
 });
 
 export const fetchAllUsers = createAsyncThunk<
   AdminUser[],
   void,
-  { rejectValue: string }
->("settings/fetchAllUsers", async (_, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/fetchAllUsers", async (_, { getState, rejectWithValue }) => {
   try {
     return await settingsService.fetchAllUsers();
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to load users"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.users.loadFailed")
+    );
   }
 });
 
 export const deleteAccount = createAsyncThunk<
   void,
   string,
-  { rejectValue: string }
->("settings/deleteAccount", async (userId, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("settings/deleteAccount", async (userId, { getState, rejectWithValue }) => {
   try {
     await settingsService.deleteAccount(userId);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to delete account"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "settings.security.deleteFailed")
+    );
   }
 });

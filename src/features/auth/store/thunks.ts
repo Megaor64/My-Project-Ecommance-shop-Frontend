@@ -1,17 +1,24 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
 import * as authService from "@/features/auth/services/authService";
 import type { AuthLoginResponse } from "@/features/auth/types";
 import type { AuthUser } from "@/lib/auth";
 import { isAuthUser } from "@/lib/auth";
+import {
+  rejectMessage,
+  translateFromState,
+  type TranslationKey,
+} from "@/lib/i18n";
+import type { RootState } from "@/store";
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    return axiosError.response?.data?.message ?? fallback;
+function authReject(
+  error: unknown,
+  state: RootState,
+  fallback: TranslationKey
+): string {
+  if (error instanceof Error && error.message === "Invalid login response") {
+    return translateFromState(state, "auth.invalidResponse");
   }
-  if (error instanceof Error) return error.message;
-  return fallback;
+  return rejectMessage(error, state, fallback);
 }
 
 function assertLoginResponse(data: unknown): AuthLoginResponse {
@@ -33,8 +40,8 @@ function assertLoginResponse(data: unknown): AuthLoginResponse {
 export const login = createAsyncThunk<
   AuthLoginResponse,
   { email: string; password: string; remember?: boolean },
-  { rejectValue: string }
->("auth/login", async (credentials, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/login", async (credentials, { getState, rejectWithValue }) => {
   try {
     const data = await authService.login(
       credentials.email,
@@ -43,56 +50,61 @@ export const login = createAsyncThunk<
     );
     return assertLoginResponse(data);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Login failed"));
+    return rejectWithValue(authReject(error, getState(), "auth.loginFailed"));
   }
 });
 
-export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Logout failed"));
-    }
+export const logout = createAsyncThunk<
+  void,
+  void,
+  { state: RootState; rejectValue: string }
+>("auth/logout", async (_, { getState, rejectWithValue }) => {
+  try {
+    await authService.logout();
+  } catch (error) {
+    return rejectWithValue(
+      rejectMessage(error, getState(), "auth.logoutFailed")
+    );
   }
-);
+});
 
 export const register = createAsyncThunk<
   { email: string },
   { name: string; email: string; password: string },
-  { rejectValue: string }
->("auth/register", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/register", async (body, { getState, rejectWithValue }) => {
   try {
     const data = await authService.register(body);
     return { email: data.email ?? body.email };
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Registration failed"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "auth.registrationFailed")
+    );
   }
 });
 
 export const verifyEmail = createAsyncThunk<
   void,
   { email: string; code: string },
-  { rejectValue: string }
->("auth/verifyEmail", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/verifyEmail", async (body, { getState, rejectWithValue }) => {
   try {
     await authService.verifyEmail(body.email, body.code);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Verification failed"));
+    return rejectWithValue(rejectMessage(error, getState(), "verify.failed"));
   }
 });
 
 export const resendVerification = createAsyncThunk<
   void,
   { email: string },
-  { rejectValue: string }
->("auth/resendVerification", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/resendVerification", async (body, { getState, rejectWithValue }) => {
   try {
     await authService.resendVerificationEmail(body.email);
   } catch (error) {
     return rejectWithValue(
-      getErrorMessage(error, "Could not send verification code")
+      rejectMessage(error, getState(), "verify.sendFailed")
     );
   }
 });
@@ -100,20 +112,22 @@ export const resendVerification = createAsyncThunk<
 export const adminLogin = createAsyncThunk<
   void,
   { email: string; password: string },
-  { rejectValue: string }
->("auth/adminLogin", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/adminLogin", async (body, { getState, rejectWithValue }) => {
   try {
     await authService.adminLogin(body.email, body.password);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Admin login failed"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "auth.loginFailed")
+    );
   }
 });
 
 export const adminVerify2fa = createAsyncThunk<
   AuthLoginResponse,
   { email: string; code: string; remember?: boolean },
-  { rejectValue: string }
->("auth/adminVerify2fa", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/adminVerify2fa", async (body, { getState, rejectWithValue }) => {
   try {
     const data = await authService.adminVerify2fa(
       body.email,
@@ -122,39 +136,42 @@ export const adminVerify2fa = createAsyncThunk<
     );
     return assertLoginResponse(data);
   } catch (error) {
-    return rejectWithValue(
-      getErrorMessage(error, "Invalid verification code")
-    );
+    return rejectWithValue(authReject(error, getState(), "verify.failed"));
   }
 });
 
 export const demoLogin = createAsyncThunk<
   AuthLoginResponse,
   void,
-  { rejectValue: string }
->("auth/demoLogin", async (_, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/demoLogin", async (_, { getState, rejectWithValue }) => {
   try {
     const data = await authService.demoLogin();
     return assertLoginResponse(data);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Demo login failed"));
+    return rejectWithValue(authReject(error, getState(), "auth.demoFailed"));
   }
 });
 
-export const fetchMe = createAsyncThunk<AuthUser, void, { rejectValue: string }>(
-  "auth/fetchMe",
-  async (_, { rejectWithValue }) => {
-    try {
-      const user = await authService.fetchMe();
-      if (!isAuthUser(user)) {
-        return rejectWithValue("Not authenticated");
-      }
-      return user;
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Not authenticated"));
+export const fetchMe = createAsyncThunk<
+  AuthUser,
+  void,
+  { state: RootState; rejectValue: string }
+>("auth/fetchMe", async (_, { getState, rejectWithValue }) => {
+  try {
+    const user = await authService.fetchMe();
+    if (!isAuthUser(user)) {
+      return rejectWithValue(
+        translateFromState(getState(), "auth.notAuthenticated")
+      );
     }
+    return user;
+  } catch (error) {
+    return rejectWithValue(
+      rejectMessage(error, getState(), "auth.notAuthenticated")
+    );
   }
-);
+});
 
 export const googleAuth = createAsyncThunk<
   AuthLoginResponse,
@@ -164,12 +181,12 @@ export const googleAuth = createAsyncThunk<
     remember?: boolean;
     adminPass?: string;
   },
-  { rejectValue: string }
->("auth/googleAuth", async (body, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("auth/googleAuth", async (body, { getState, rejectWithValue }) => {
   try {
     const data = await authService.googleAuth(body);
     return assertLoginResponse(data);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Google sign-in failed"));
+    return rejectWithValue(authReject(error, getState(), "auth.googleFailed"));
   }
 });

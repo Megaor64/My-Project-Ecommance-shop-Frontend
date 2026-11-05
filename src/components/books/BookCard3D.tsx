@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "@/features/products/types";
 import { AddToCartButton } from "@/features/cart/components/AddToCartButton";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type BookCard3DProps = {
@@ -19,10 +21,12 @@ export function BookCard3D({
   compact,
   showAddToCart = true,
 }: BookCard3DProps) {
+  const formatPrice = useFormatPrice();
+  const t = useT();
   return (
     <article
       className={cn("book group", className)}
-      aria-label={`${book.title} by ${book.author}`}
+      aria-label={t("book.ariaLabel", { title: book.title, author: book.author })}
     >
       <Link href={`/book?id=${encodeURIComponent(book.id)}`} className="block">
         <div
@@ -35,7 +39,7 @@ export function BookCard3D({
             {book.coverImage ? (
               <Image
                 src={book.coverImage}
-                alt={`Cover of ${book.title}`}
+                alt={t("book.coverAlt", { title: book.title })}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 128px, 176px"
@@ -72,7 +76,7 @@ export function BookCard3D({
           </h3>
           <p className="mt-1 font-lora text-sm text-warm-gray">{book.author}</p>
           <p className="mt-2 font-lora text-sm text-gold">
-            ${book.price.toFixed(2)}
+            {formatPrice(book.price)}
           </p>
         </div>
       </Link>

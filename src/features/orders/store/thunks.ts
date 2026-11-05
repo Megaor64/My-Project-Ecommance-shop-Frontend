@@ -1,63 +1,63 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
 import type { Order } from "@/features/orders/types";
 import * as orderService from "@/features/orders/services/orderService";
 import type { CreateOrderPayload } from "@/features/orders/services/orderService";
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    return axiosError.response?.data?.message ?? fallback;
-  }
-  if (error instanceof Error) return error.message;
-  return fallback;
-}
+import { rejectMessage } from "@/lib/i18n";
+import type { RootState } from "@/store";
 
 export const fetchMyOrders = createAsyncThunk<
   Order[],
   void,
-  { rejectValue: string }
->("orders/fetchMy", async (_, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("orders/fetchMy", async (_, { getState, rejectWithValue }) => {
   try {
     return await orderService.fetchMyOrders();
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to load orders"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "orders.loadFailed")
+    );
   }
 });
 
 export const createOrder = createAsyncThunk<
   Order,
   CreateOrderPayload,
-  { rejectValue: string }
->("orders/create", async (payload, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("orders/create", async (payload, { getState, rejectWithValue }) => {
   try {
     return await orderService.createOrder(payload);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to create order"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "checkout.failed")
+    );
   }
 });
 
 export const cancelOrder = createAsyncThunk<
   Order,
   string,
-  { rejectValue: string }
->("orders/cancel", async (orderId, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("orders/cancel", async (orderId, { getState, rejectWithValue }) => {
   try {
     return await orderService.cancelOrder(orderId);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to cancel order"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "orders.cancelFailed")
+    );
   }
 });
 
 export const deleteOrder = createAsyncThunk<
   string,
   string,
-  { rejectValue: string }
->("orders/delete", async (orderId, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("orders/delete", async (orderId, { getState, rejectWithValue }) => {
   try {
     await orderService.deleteOrder(orderId);
     return orderId;
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to delete order"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "orders.removeFailed")
+    );
   }
 });

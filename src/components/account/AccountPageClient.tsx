@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AccountSidebar } from "@/components/sidebar/AccountSidebar";
 import { selectAuthLoading, selectUser } from "@/features/auth/store/selectors";
+import { useT } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
 import { Button } from "@/components/ui/button";
 
 export function AccountPageClient() {
   const router = useRouter();
+  const t = useT();
   const user = useAppSelector(selectUser);
   const isLoading = useAppSelector(selectAuthLoading);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,7 +24,7 @@ export function AccountPageClient() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <p className="font-lora text-warm-gray">Loading your account…</p>
+        <p className="font-lora text-warm-gray">{t("account.loading")}</p>
       </div>
     );
   }
@@ -33,13 +35,13 @@ export function AccountPageClient() {
     <>
       <div className="mx-auto max-w-3xl px-4 py-12 md:py-16">
         <p className="font-lora text-sm uppercase tracking-[0.2em] text-gold">
-          Welcome back
+          {t("account.welcomeBack")}
         </p>
         <h1 className="mt-3 font-playfair text-3xl font-semibold text-ink md:text-4xl">
           {user.name}
         </h1>
         <p className="mt-3 font-lora text-warm-gray">
-          Manage your profile, preferences, and orders.
+          {t("account.intro")}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Button
@@ -47,10 +49,10 @@ export function AccountPageClient() {
             className="rounded-md"
             onClick={() => setSidebarOpen(true)}
           >
-            Quick panel
+            {t("account.quickPanel")}
           </Button>
           <Button type="button" variant="outline" className="rounded-md font-lora" asChild>
-            <a href="/account/settings/appearance">Settings</a>
+            <a href="/account/settings/appearance">{t("account.settings")}</a>
           </Button>
         </div>
       </div>

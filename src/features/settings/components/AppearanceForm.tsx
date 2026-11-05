@@ -22,6 +22,7 @@ import { selectUser } from "@/features/auth/store/selectors";
 import type { AppearanceSettings } from "@/features/settings/types";
 import { selectSettingsSaveStatus, selectSettings } from "@/features/settings/store/selectors";
 import { updateAppearance } from "@/features/settings/store/thunks";
+import { createTranslator, useT } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type AppearanceFormProps = {
@@ -30,6 +31,7 @@ type AppearanceFormProps = {
 
 export function AppearanceForm({ initialValues }: AppearanceFormProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector(selectUser);
   const settings = useAppSelector(selectSettings);
   const saveStatus = useAppSelector(selectSettingsSaveStatus);
@@ -44,7 +46,9 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
   }, [resolved]);
 
   if (!form) {
-    return <p className="font-lora text-warm-gray">טוען הגדרות…</p>;
+    return (
+      <p className="font-lora text-warm-gray">{t("settings.loadingSettings")}</p>
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -57,9 +61,13 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
       if (form.theme !== "system") {
         setTheme(form.theme);
       }
-      toast.success("העדפות העיצוב נשמרו");
+      // `t` still holds the previous language in this closure; announce the
+      // save in the language that was just applied.
+      toast.success(
+        createTranslator(form.language)("settings.appearance.saved")
+      );
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "שמירה נכשלה");
+      toast.error(typeof err === "string" ? err : t("settings.saveFailed"));
     }
   }
 
@@ -67,7 +75,7 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
       <FieldGroup>
         <Field>
-          <FieldLabel>ערכת נושא</FieldLabel>
+          <FieldLabel>{t("settings.appearance.theme")}</FieldLabel>
           <Select
             value={form.theme}
             onValueChange={(value) =>
@@ -82,15 +90,21 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">בהיר</SelectItem>
-              <SelectItem value="dark">כהה</SelectItem>
-              <SelectItem value="system">מערכת</SelectItem>
+              <SelectItem value="light">
+                {t("settings.appearance.theme.light")}
+              </SelectItem>
+              <SelectItem value="dark">
+                {t("settings.appearance.theme.dark")}
+              </SelectItem>
+              <SelectItem value="system">
+                {t("settings.appearance.theme.system")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </Field>
 
         <Field>
-          <FieldLabel>שפה</FieldLabel>
+          <FieldLabel>{t("settings.appearance.language")}</FieldLabel>
           <Select
             value={form.language}
             onValueChange={(value) =>
@@ -116,7 +130,7 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
         </Field>
 
         <Field>
-          <FieldLabel>גודל גופן</FieldLabel>
+          <FieldLabel>{t("settings.appearance.fontSize")}</FieldLabel>
           <Select
             value={form.fontSize}
             onValueChange={(value) =>
@@ -134,15 +148,23 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="small">קטן</SelectItem>
-              <SelectItem value="medium">בינוני</SelectItem>
-              <SelectItem value="large">גדול</SelectItem>
+              <SelectItem value="small">
+                {t("settings.appearance.fontSize.small")}
+              </SelectItem>
+              <SelectItem value="medium">
+                {t("settings.appearance.fontSize.medium")}
+              </SelectItem>
+              <SelectItem value="large">
+                {t("settings.appearance.fontSize.large")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="currency">מטבע</FieldLabel>
+          <FieldLabel htmlFor="currency">
+            {t("settings.appearance.currency")}
+          </FieldLabel>
           <Select
             value={form.currency}
             onValueChange={(value) =>
@@ -163,10 +185,10 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
         <div className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-3">
           <div>
             <Label htmlFor="compact-mode" className="font-lora text-sm">
-              מצב קומפקטי
+              {t("settings.appearance.compact")}
             </Label>
             <p className="font-lora text-xs text-warm-gray">
-              צפוף יותר ברשימות וטבלאות
+              {t("settings.appearance.compactHint")}
             </p>
           </div>
           <Switch
@@ -183,7 +205,9 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
           className="rounded-md"
           disabled={saveStatus === "loading"}
         >
-          {saveStatus === "loading" ? "שומר…" : "שמור עיצוב"}
+          {saveStatus === "loading"
+            ? t("common.saving")
+            : t("settings.appearance.save")}
         </Button>
       </FieldGroup>
     </form>

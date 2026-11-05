@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type { Book } from "@/features/products/types";
-import { productFormSchema } from "@/features/products/schemas/productSchema";
+import { createProductFormSchema } from "@/features/products/schemas/productSchema";
 import { formatAuthorDescription } from "@/features/products/utils/mapProductToBook";
 import {
   selectAdminProducts,
@@ -46,6 +46,8 @@ import {
   updateProduct,
 } from "@/features/products/store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { useT } from "@/lib/i18n";
 
 const emptyForm = {
   name: "",
@@ -70,6 +72,8 @@ function getErrorMessage(err: unknown, fallback: string): string {
 
 export function ProductsAdminPanel() {
   const dispatch = useAppDispatch();
+  const formatPrice = useFormatPrice();
+  const t = useT();
   const products = useAppSelector(selectAdminProducts);
   const isLoading = useAppSelector(selectProductsLoading);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -99,9 +103,9 @@ export function ProductsAdminPanel() {
       const books = await dispatch(fetchProducts()).unwrap();
       dispatch(hydrateAdminProducts(books));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not load products.");
+      toast.error(typeof err === "string" ? err : t("admin.products.loadFailed"));
     }
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   useEffect(() => {
     void loadProducts();
@@ -135,7 +139,7 @@ export function ProductsAdminPanel() {
   }
 
   function buildFormData() {
-    const parsed = productFormSchema.safeParse({
+    const parsed = createProductFormSchema(t).safeParse({
       name: form.name,
       description: combinedDescription(),
       price: form.price,
@@ -144,7 +148,7 @@ export function ProductsAdminPanel() {
       isActive: form.isActive,
     });
     if (!parsed.success) {
-      const first = parsed.error.issues[0]?.message ?? "Invalid form";
+      const first = parsed.error.issues[0]?.message ?? t("common.generalError");
       throw new Error(first);
     }
     const values = parsed.data;
@@ -169,29 +173,29 @@ export function ProductsAdminPanel() {
             formData: buildFormData(),
           })
         ).unwrap();
-        toast.success("Product updated.");
+        toast.success(t("admin.products.updated"));
       } else {
         if (!imageFile) {
-          throw new Error("Cover image is required for new products.");
+          throw new Error(t("admin.products.coverRequired"));
         }
         await dispatch(createProduct(buildFormData())).unwrap();
-        toast.success("Product created.");
+        toast.success(t("admin.products.created"));
       }
       setDialogOpen(false);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Save failed"));
+      toast.error(getErrorMessage(err, t("admin.products.saveFailed")));
     } finally {
       setIsSaving(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this product?")) return;
+    if (!window.confirm(t("admin.products.confirmDelete"))) return;
     try {
       await dispatch(deleteProduct(id)).unwrap();
-      toast.success("Product deleted.");
+      toast.success(t("admin.products.deleted"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Delete failed"));
+      toast.error(getErrorMessage(err, t("admin.products.deleteFailed")));
     }
   }
 
@@ -199,30 +203,32 @@ export function ProductsAdminPanel() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-playfair text-3xl font-semibold text-ink">Products</h1>
+          <h1 className="font-playfair text-3xl font-semibold text-ink">
+            {t("admin.products.title")}
+          </h1>
           <p className="mt-1 font-lora text-sm text-warm-gray">
-            Create, edit, and remove catalog items.
+            {t("admin.products.subtitle")}
           </p>
         </div>
         <Button type="button" className="rounded-md font-lora" onClick={openCreate}>
-          Add product
+          {t("admin.products.add")}
         </Button>
       </div>
 
       {isLoading && products.length === 0 ? (
-        <p className="font-lora text-sm text-warm-gray">Loading products…</p>
+        <p className="font-lora text-sm text-warm-gray">{t("admin.products.loading")}</p>
       ) : products.length === 0 ? (
-        <p className="font-lora text-sm text-warm-gray">No products in the catalog yet.</p>
+        <p className="font-lora text-sm text-warm-gray">{t("admin.products.empty")}</p>
       ) : (
         <div className="overflow-x-auto rounded-md border border-border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="font-lora">Title</TableHead>
-                <TableHead className="font-lora">Category</TableHead>
-                <TableHead className="font-lora">Price</TableHead>
-                <TableHead className="font-lora">Sold</TableHead>
-                <TableHead className="font-lora text-right">Actions</TableHead>
+                <TableHead className="font-lora">{t("common.title")}</TableHead>
+                <TableHead className="font-lora">{t("common.category")}</TableHead>
+                <TableHead className="font-lora">{t("common.price")}</TableHead>
+                <TableHead className="font-lora">{t("admin.products.sold")}</TableHead>
+                <TableHead className="font-lora text-end">{t("common.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -230,11 +236,11 @@ export function ProductsAdminPanel() {
                 <TableRow key={book.id}>
                   <TableCell className="font-lora">{book.title}</TableCell>
                   <TableCell className="font-lora text-warm-gray">{book.genre}</TableCell>
-                  <TableCell className="font-lora">${book.price.toFixed(2)}</TableCell>
+                  <TableCell className="font-lora">{formatPrice(book.price)}</TableCell>
                   <TableCell className="font-lora text-warm-gray">
                     {salesByProductId[book.id] ?? 0}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <Button
                       type="button"
                       variant="ghost"
@@ -242,7 +248,7 @@ export function ProductsAdminPanel() {
                       className="font-lora"
                       onClick={() => openEdit(book)}
                     >
-                      Edit
+                      {t("common.edit")}
                     </Button>
                     <Button
                       type="button"
@@ -251,7 +257,7 @@ export function ProductsAdminPanel() {
                       className="font-lora text-destructive"
                       onClick={() => void handleDelete(book.id)}
                     >
-                      Delete
+                      {t("common.delete")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -265,18 +271,20 @@ export function ProductsAdminPanel() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-playfair">
-              {editing ? "Edit product" : "New product"}
+              {editing
+                ? t("admin.products.dialogEdit")
+                : t("admin.products.dialogNew")}
             </DialogTitle>
             <DialogDescription className="font-lora">
               {editing
-                ? "Update fields below. Upload a new cover image to replace the current one."
-                : "All fields match the catalog API. Upload a cover image (JPEG, PNG, WebP)."}
+                ? t("admin.products.dialogEditHint")
+                : t("admin.products.dialogCreateHint")}
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="product-name">Name</FieldLabel>
+              <FieldLabel htmlFor="product-name">{t("common.name")}</FieldLabel>
               <Input
                 id="product-name"
                 value={form.name}
@@ -286,7 +294,7 @@ export function ProductsAdminPanel() {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="product-author">Author</FieldLabel>
+              <FieldLabel htmlFor="product-author">{t("common.author")}</FieldLabel>
               <Input
                 id="product-author"
                 value={form.author}
@@ -294,11 +302,11 @@ export function ProductsAdminPanel() {
                   setForm((f) => ({ ...f, author: e.target.value }))
                 }
                 className="font-lora"
-                placeholder="e.g. Elena Marchetti"
+                placeholder={t("admin.products.authorPlaceholder")}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="product-description">Description</FieldLabel>
+              <FieldLabel htmlFor="product-description">{t("common.description")}</FieldLabel>
               <Textarea
                 id="product-description"
                 value={form.description}
@@ -306,12 +314,12 @@ export function ProductsAdminPanel() {
                   setForm((f) => ({ ...f, description: e.target.value }))
                 }
                 className="font-lora min-h-24"
-                placeholder="Synopsis or back-cover copy (without author line)"
+                placeholder={t("admin.products.descriptionPlaceholder")}
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="product-price">Price</FieldLabel>
+                <FieldLabel htmlFor="product-price">{t("common.price")}</FieldLabel>
                 <Input
                   id="product-price"
                   type="number"
@@ -322,9 +330,12 @@ export function ProductsAdminPanel() {
                   className="font-lora"
                   required
                 />
+                <p className="mt-1 font-lora text-xs text-warm-gray">
+                  {t("admin.products.priceHint")}
+                </p>
               </Field>
               <Field>
-                <FieldLabel htmlFor="product-stock">Stock</FieldLabel>
+                <FieldLabel htmlFor="product-stock">{t("common.stock")}</FieldLabel>
                 <Input
                   id="product-stock"
                   type="number"
@@ -336,7 +347,7 @@ export function ProductsAdminPanel() {
               </Field>
             </div>
             <Field>
-              <FieldLabel htmlFor="product-category">Category</FieldLabel>
+              <FieldLabel htmlFor="product-category">{t("common.category")}</FieldLabel>
               <Input
                 id="product-category"
                 value={form.category}
@@ -345,12 +356,12 @@ export function ProductsAdminPanel() {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="product-image">Cover image</FieldLabel>
+              <FieldLabel htmlFor="product-image">{t("admin.products.coverImage")}</FieldLabel>
               {editing?.coverImage && !imageFile ? (
                 <div className="relative mb-2 h-32 w-24 overflow-hidden rounded-sm border border-border">
                   <Image
                     src={editing.coverImage}
-                    alt={`Current cover for ${editing.title}`}
+                    alt={t("book.currentCoverAlt", { title: editing.title })}
                     fill
                     className="object-cover"
                     sizes="96px"
@@ -368,7 +379,7 @@ export function ProductsAdminPanel() {
               />
               {editing ? (
                 <p className="mt-1 font-lora text-xs text-warm-gray">
-                  Leave empty to keep the current cover.
+                  {t("admin.products.keepCover")}
                 </p>
               ) : null}
             </Field>
@@ -381,11 +392,11 @@ export function ProductsAdminPanel() {
                 }
               />
               <Label htmlFor="product-active" className="font-lora text-sm">
-                Active in storefront
+                {t("admin.products.active")}
               </Label>
               {!form.isActive && (
                 <Badge variant="outline" className="font-lora">
-                  Hidden
+                  {t("admin.products.hidden")}
                 </Badge>
               )}
             </div>
@@ -398,7 +409,7 @@ export function ProductsAdminPanel() {
               className="font-lora"
               onClick={() => setDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -406,7 +417,11 @@ export function ProductsAdminPanel() {
               disabled={isSaving}
               onClick={() => void handleSave()}
             >
-              {isSaving ? "Saving…" : editing ? "Save changes" : "Create product"}
+              {isSaving
+                ? t("common.saving")
+                : editing
+                  ? t("admin.products.saveChanges")
+                  : t("admin.products.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

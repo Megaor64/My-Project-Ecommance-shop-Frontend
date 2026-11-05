@@ -7,6 +7,7 @@ import {
   selectUser,
 } from "@/features/auth/store/selectors";
 import { isAdminRole } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
 
 type RouteGuardProps = {
@@ -21,6 +22,7 @@ export function RouteGuard({
   requireAdmin = false,
 }: RouteGuardProps) {
   const router = useRouter();
+  const t = useT();
   const pathname = usePathname();
   const user = useAppSelector(selectUser);
   const isLoading = useAppSelector(selectAuthLoading);
@@ -40,7 +42,7 @@ export function RouteGuard({
   }, [isLoading, user, router, pathname, loginPath, requireAdmin]);
 
   if (isLoading) {
-    return <p className="font-lora text-warm-gray">Loading…</p>;
+    return <p className="font-lora text-warm-gray">{t("common.loading")}</p>;
   }
 
   if (!user || (requireAdmin && !isAdminRole(user.role))) {

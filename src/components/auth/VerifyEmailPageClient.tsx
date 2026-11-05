@@ -15,12 +15,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { resendVerification } from "@/features/auth/store/thunks";
 import { verifyEmailPath } from "@/lib/auth-errors";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 
 export function VerifyEmailPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const t = useT();
   const emailFromQuery = searchParams.get("email")?.trim() ?? "";
   const shouldResendOnLoad = searchParams.get("resend") === "1";
   const resendStarted = useRef(false);
@@ -37,15 +39,13 @@ export function VerifyEmailPageClient() {
       setIsSendingCode(true);
       try {
         await dispatch(resendVerification({ email: targetEmail })).unwrap();
-        toast.success("Verification code sent to your email.");
+        toast.success(t("verify.sent"));
       } catch (err) {
         const message =
-          typeof err === "string" ? err : "Could not send verification code";
+          typeof err === "string" ? err : t("verify.sendFailed");
         // Old API deployments may not have POST /auth/resend-verification yet.
         if (message === "Not found") {
-          toast.message(
-            "Use the code from your registration email, or click Resend code after the server is updated."
-          );
+          toast.message(t("verify.useRegistrationCode"));
           return;
         }
         toast.error(message);
@@ -53,7 +53,7 @@ export function VerifyEmailPageClient() {
         setIsSendingCode(false);
       }
     },
-    [dispatch]
+    [dispatch, t]
   );
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function VerifyEmailPageClient() {
     e.preventDefault();
     const trimmed = email.trim();
     if (!trimmed) {
-      toast.error("Enter your email address.");
+      toast.error(t("verify.enterEmail"));
       return;
     }
     router.replace(verifyEmailPath(trimmed, false));
@@ -78,13 +78,13 @@ export function VerifyEmailPageClient() {
   if (!emailFromQuery) {
     return (
       <AuthShell
-        title="Verify your email"
-        subtitle="Enter your email and we will send you a new verification code."
+        title={t("verify.title")}
+        subtitle={t("verify.subtitleRequest")}
       >
         <form onSubmit={handleRequestCode}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="verify-email">Email</FieldLabel>
+              <FieldLabel htmlFor="verify-email">{t("common.email")}</FieldLabel>
               <Input
                 id="verify-email"
                 type="email"
@@ -99,13 +99,13 @@ export function VerifyEmailPageClient() {
               className="w-full rounded-md"
               disabled={isSendingCode}
             >
-              {isSendingCode ? "Sending code…" : "Send verification code"}
+              {isSendingCode ? t("verify.sendingCode") : t("verify.sendCode")}
             </Button>
           </FieldGroup>
         </form>
         <p className="mt-6 text-center font-lora text-sm text-warm-gray">
           <Link href="/login" className="text-gold hover:underline">
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </p>
       </AuthShell>
@@ -114,8 +114,8 @@ export function VerifyEmailPageClient() {
 
   return (
     <AuthShell
-      title="Verify your email"
-      subtitle="Enter the code we sent to complete verification."
+      title={t("verify.title")}
+      subtitle={t("verify.subtitleVerify")}
     >
       <VerifyEmailStep
         email={emailFromQuery}
@@ -123,7 +123,7 @@ export function VerifyEmailPageClient() {
       />
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
         <Link href="/login" className="text-gold hover:underline">
-          Back to sign in
+          {t("auth.backToSignIn")}
         </Link>
       </p>
     </AuthShell>

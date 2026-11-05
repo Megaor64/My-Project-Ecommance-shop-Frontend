@@ -24,12 +24,13 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { mapInquiry, type Inquiry, type InquiryStatus } from "@/lib/inquiries";
+import { useLocale, useT, type Translator } from "@/lib/i18n";
 import httpClient from "@/lib/httpClient";
 import { cn } from "@/lib/utils";
 
 type FilterTab = "all" | InquiryStatus;
 
-function statusBadge(status: InquiryStatus) {
+function statusBadge(status: InquiryStatus, t: Translator) {
   const classes: Record<InquiryStatus, string> = {
     new: "bg-gold/20 text-ink border-gold/40",
     read: "bg-sage/15 text-sage border-sage/30",
@@ -37,12 +38,14 @@ function statusBadge(status: InquiryStatus) {
   };
   return (
     <Badge variant="outline" className={cn("font-lora capitalize", classes[status])}>
-      {status}
+      {t(`admin.inquiries.status.${status}` as const)}
     </Badge>
   );
 }
 
 export function InquiriesPanel() {
+  const t = useT();
+  const { locale } = useLocale();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
@@ -59,12 +62,12 @@ export function InquiriesPanel() {
         Array.isArray(data) ? data.map((item) => mapInquiry(item)) : []
       );
     } catch {
-      toast.error("Could not load inquiries.");
+      toast.error(t("admin.inquiries.loadFailed"));
       setInquiries([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadInquiries();
@@ -84,12 +87,9 @@ export function InquiriesPanel() {
       updates
     );
     if (!data || typeof data !== "object") {
-      throw new Error("Update failed");
+      throw new Error(t("admin.inquiries.updateFailed"));
     }
-    return {
-      inquiry: mapInquiry(data),
-      message: "Inquiry updated",
-    };
+    return { inquiry: mapInquiry(data) };
   }
 
   async function openReply(inquiry: Inquiry) {
@@ -100,7 +100,7 @@ export function InquiriesPanel() {
         await patchInquiry(inquiry.id, { status: "read" });
         await loadInquiries();
       } catch {
-        toast.error("Could not mark as read.");
+        toast.error(t("admin.inquiries.markReadFailed"));
       }
     }
     setReplyOpen(true);
@@ -110,23 +110,23 @@ export function InquiriesPanel() {
     if (!selected) return;
     const trimmed = replyText.trim();
     if (!trimmed) {
-      toast.error("Please enter a reply.");
+      toast.error(t("admin.inquiries.enterReply"));
       return;
     }
     setIsSaving(true);
     try {
-      const { message } = await patchInquiry(selected.id, {
+      await patchInquiry(selected.id, {
         status: "replied",
         reply: trimmed,
       });
       await loadInquiries();
       setReplyOpen(false);
       setSelected(null);
-      toast.success(
-        message ?? "Reply saved and emailed to the customer."
-      );
+      toast.success(t("admin.inquiries.replySaved"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save reply.");
+      toast.error(
+        err instanceof Error ? err.message : t("admin.inquiries.replyFailed")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -137,24 +137,26 @@ export function InquiriesPanel() {
       await patchInquiry(id, { status: "read" });
       await loadInquiries();
     } catch {
-      toast.error("Could not update inquiry.");
+      toast.error(t("admin.inquiries.updateFailed"));
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this inquiry permanently?")) return;
+    if (!confirm(t("admin.inquiries.confirmDelete"))) return;
     try {
       await httpClient.delete(`/inquiries/${id}`);
       await loadInquiries();
-      toast.success("Inquiry deleted.");
+      toast.success(t("admin.inquiries.deleted"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not delete inquiry.");
+      toast.error(
+        err instanceof Error ? err.message : t("admin.inquiries.deleteFailed")
+      );
     }
   }
 
   if (isLoading) {
     return (
-      <p className="font-lora text-sm text-warm-gray">Loading inquiries…</p>
+      <p className="font-lora text-sm text-warm-gray">{t("admin.inquiries.loading")}</p>
     );
   }
 
@@ -165,27 +167,27 @@ export function InquiriesPanel() {
         onValueChange={(v) => setFilter(v as FilterTab)}
       >
         <TabsList className="font-lora">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="new">New</TabsTrigger>
-          <TabsTrigger value="read">Read</TabsTrigger>
-          <TabsTrigger value="replied">Replied</TabsTrigger>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="new">{t("admin.inquiries.status.new")}</TabsTrigger>
+          <TabsTrigger value="read">{t("admin.inquiries.status.read")}</TabsTrigger>
+          <TabsTrigger value="replied">{t("admin.inquiries.status.replied")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {filtered.length === 0 ? (
         <p className="font-lora text-sm text-warm-gray">
-          No inquiries in this view. Messages from the contact form appear here.
+          {t("admin.inquiries.empty")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-md border border-gold/20 bg-card">
           <Table>
             <TableHeader>
               <TableRow className="font-lora">
-                <TableHead>From</TableHead>
-                <TableHead className="hidden sm:table-cell">Subject</TableHead>
-                <TableHead className="hidden md:table-cell">Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("common.from")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("common.subject")}</TableHead>
+                <TableHead className="hidden md:table-cell">{t("common.date")}</TableHead>
+                <TableHead>{t("common.status")}</TableHead>
+                <TableHead className="text-end">{t("common.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -201,10 +203,10 @@ export function InquiriesPanel() {
                     {inquiry.subject}
                   </TableCell>
                   <TableCell className="hidden text-warm-gray md:table-cell">
-                    {new Date(inquiry.createdAt).toLocaleDateString()}
+                    {new Date(inquiry.createdAt).toLocaleDateString(locale)}
                   </TableCell>
-                  <TableCell>{statusBadge(inquiry.status)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>{statusBadge(inquiry.status, t)}</TableCell>
+                  <TableCell className="text-end">
                     <div className="flex justify-end gap-2">
                       {inquiry.status === "new" && (
                         <Button
@@ -214,7 +216,7 @@ export function InquiriesPanel() {
                           className="h-8 font-lora"
                           onClick={() => void markRead(inquiry.id)}
                         >
-                          Mark read
+                          {t("admin.inquiries.markRead")}
                         </Button>
                       )}
                       <Button
@@ -223,7 +225,9 @@ export function InquiriesPanel() {
                         className="h-8 rounded-md font-lora"
                         onClick={() => void openReply(inquiry)}
                       >
-                        {inquiry.reply ? "View reply" : "Reply"}
+                        {inquiry.reply
+                          ? t("admin.inquiries.viewReply")
+                          : t("admin.inquiries.reply")}
                       </Button>
                       <Button
                         type="button"
@@ -232,7 +236,7 @@ export function InquiriesPanel() {
                         className="h-8 font-lora text-destructive hover:text-destructive"
                         onClick={() => void handleDelete(inquiry.id)}
                       >
-                        Delete
+                        {t("common.delete")}
                       </Button>
                     </div>
                   </TableCell>
@@ -247,19 +251,19 @@ export function InquiriesPanel() {
         <DialogContent className="max-w-lg font-lora">
           <DialogHeader>
             <DialogTitle className="font-playfair text-ink">
-              Reply to {selected?.name}
+              {t("admin.inquiries.replyTo", { name: selected?.name ?? "" })}
             </DialogTitle>
             <DialogDescription>
               {selected?.subject} — {selected?.email}
             </DialogDescription>
           </DialogHeader>
           {selected && (
-            <blockquote className="border-l-2 border-gold/40 pl-3 text-sm text-warm-gray">
+            <blockquote className="border-s-2 border-gold/40 ps-3 text-sm text-warm-gray">
               {selected.message}
             </blockquote>
           )}
           <div className="space-y-2">
-            <Label htmlFor="reply-text">Your reply</Label>
+            <Label htmlFor="reply-text">{t("admin.inquiries.yourReply")}</Label>
             <Textarea
               id="reply-text"
               rows={5}
@@ -275,7 +279,7 @@ export function InquiriesPanel() {
               className="rounded-md"
               onClick={() => setReplyOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -283,7 +287,7 @@ export function InquiriesPanel() {
               disabled={isSaving}
               onClick={() => void handleSaveReply()}
             >
-              {isSaving ? "Saving…" : "Save reply"}
+              {isSaving ? t("common.saving") : t("admin.inquiries.saveReply")}
             </Button>
           </DialogFooter>
         </DialogContent>

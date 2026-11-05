@@ -19,9 +19,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectAppearance } from "@/features/settings/store/selectors";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { formatPrice as formatPriceIn } from "@/lib/currency";
+import { useT } from "@/lib/i18n";
 
 export function CheckoutPageClient() {
   const router = useRouter();
+  const t = useT();
+  const formatPrice = useFormatPrice();
+  const { currency, language } = useAppSelector(selectAppearance);
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const items = useAppSelector(selectCartItems);
@@ -39,9 +46,9 @@ export function CheckoutPageClient() {
   if (!user) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="font-lora text-warm-gray">Sign in to complete your order.</p>
+        <p className="font-lora text-warm-gray">{t("checkout.signInPrompt")}</p>
         <Button asChild className="mt-6 rounded-md font-lora normal-case">
-          <Link href="/login">Sign in</Link>
+          <Link href="/login">{t("checkout.signIn")}</Link>
         </Button>
       </div>
     );
@@ -50,9 +57,9 @@ export function CheckoutPageClient() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="font-lora text-warm-gray">Your bag is empty.</p>
+        <p className="font-lora text-warm-gray">{t("checkout.emptyBag")}</p>
         <Button asChild className="mt-6 rounded-md font-lora normal-case">
-          <Link href="/books">Browse books</Link>
+          <Link href="/books">{t("checkout.browseBooks")}</Link>
         </Button>
       </div>
     );
@@ -74,10 +81,10 @@ export function CheckoutPageClient() {
         })
       ).unwrap();
       await dispatch(clearCart()).unwrap();
-      toast.success("Order placed — thank you for your purchase.");
+      toast.success(t("checkout.success"));
       router.push("/account");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not place order");
+      toast.error(typeof err === "string" ? err : t("checkout.failed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -86,26 +93,34 @@ export function CheckoutPageClient() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 md:py-14">
       <header className="mb-10">
-        <h1 className="font-playfair text-3xl font-semibold text-ink">Checkout</h1>
+        <h1 className="font-playfair text-3xl font-semibold text-ink">{t("checkout.title")}</h1>
         <p className="mt-2 font-lora text-warm-gray">
-          Enter your shipping and payment details to complete your order.
+          {t("checkout.subtitle")}
         </p>
       </header>
 
       <div className="mb-8 rounded-md border border-border/60 bg-cream/50 p-6">
         <p className="font-lora text-sm text-warm-gray">
-          {items.length} item{items.length === 1 ? "" : "s"} · Subtotal{" "}
-          <span className="font-playfair text-ink">${subtotal.toFixed(2)}</span>
+          {t.plural("checkout.summary", items.length)}{" "}
+          <span className="font-playfair text-ink">{formatPrice(subtotal)}</span>
         </p>
+        {currency !== "USD" ? (
+          <p className="mt-2 font-lora text-xs text-warm-gray">
+            {t("checkout.usdNote", {
+              currency,
+              amount: formatPriceIn(subtotal, "USD", language),
+            })}
+          </p>
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit}>
         <FieldGroup>
           <h2 className="font-playfair text-xl font-semibold text-ink">
-            Shipping address
+            {t("checkout.shippingAddress")}
           </h2>
           <Field>
-            <FieldLabel htmlFor="street">Street address</FieldLabel>
+            <FieldLabel htmlFor="street">{t("checkout.street")}</FieldLabel>
             <Input
               id="street"
               required
@@ -114,7 +129,7 @@ export function CheckoutPageClient() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="city">City</FieldLabel>
+            <FieldLabel htmlFor="city">{t("checkout.city")}</FieldLabel>
             <Input
               id="city"
               required
@@ -124,7 +139,7 @@ export function CheckoutPageClient() {
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="zip">ZIP / Postal code</FieldLabel>
+              <FieldLabel htmlFor="zip">{t("checkout.zip")}</FieldLabel>
               <Input
                 id="zip"
                 required
@@ -133,7 +148,7 @@ export function CheckoutPageClient() {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="country">Country</FieldLabel>
+              <FieldLabel htmlFor="country">{t("checkout.country")}</FieldLabel>
               <Input
                 id="country"
                 required
@@ -144,10 +159,10 @@ export function CheckoutPageClient() {
           </div>
 
           <h2 className="mt-4 font-playfair text-xl font-semibold text-ink">
-            Payment method
+            {t("checkout.paymentMethod")}
           </h2>
           <Field>
-            <FieldLabel htmlFor="cardholderName">Name on card</FieldLabel>
+            <FieldLabel htmlFor="cardholderName">{t("checkout.cardholderName")}</FieldLabel>
             <Input
               id="cardholderName"
               required
@@ -157,7 +172,7 @@ export function CheckoutPageClient() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="cardNumber">Card number</FieldLabel>
+            <FieldLabel htmlFor="cardNumber">{t("checkout.cardNumber")}</FieldLabel>
             <Input
               id="cardNumber"
               required
@@ -171,20 +186,20 @@ export function CheckoutPageClient() {
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="expiration">Expiration date</FieldLabel>
+              <FieldLabel htmlFor="expiration">{t("checkout.expiration")}</FieldLabel>
               <Input
                 id="expiration"
                 required
                 autoComplete="cc-exp"
                 placeholder="MM/YY"
                 pattern="(0[1-9]|1[0-2])\/[0-9]{2}"
-                title="Use MM/YY format, e.g. 03/28"
+                title={t("checkout.expirationHint")}
                 value={expiration}
                 onChange={(e) => setExpiration(e.target.value)}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="cvv">CVV</FieldLabel>
+              <FieldLabel htmlFor="cvv">{t("checkout.cvv")}</FieldLabel>
               <Input
                 id="cvv"
                 required
@@ -205,7 +220,7 @@ export function CheckoutPageClient() {
             className="w-full rounded-md font-lora normal-case"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Placing order…" : "Place order"}
+            {isSubmitting ? t("checkout.placing") : t("checkout.placeOrder")}
           </Button>
         </FieldGroup>
       </form>

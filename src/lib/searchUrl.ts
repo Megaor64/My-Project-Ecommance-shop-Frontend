@@ -1,7 +1,21 @@
 export type SearchablePage = "/books" | "/genres";
 
+/** Static export uses `trailingSlash: true`, so `/books/` must match `/books`. */
+export function normalizePath(pathname: string | null | undefined): string {
+  if (!pathname) return "";
+  if (pathname !== "/" && pathname.endsWith("/")) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+export function isSearchablePath(pathname: string | null): boolean {
+  const path = normalizePath(pathname);
+  return path === "/books" || path === "/genres";
+}
+
 export function getSearchPage(pathname: string): SearchablePage {
-  if (pathname === "/genres") return "/genres";
+  if (normalizePath(pathname) === "/genres") return "/genres";
   return "/books";
 }
 

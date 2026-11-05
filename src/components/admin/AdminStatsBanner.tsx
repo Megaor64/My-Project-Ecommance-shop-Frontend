@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import httpClient from "@/lib/httpClient";
+import { useT } from "@/lib/i18n";
 
 type AdminStats = {
   userCount?: number;
 };
 
 export function AdminStatsBanner() {
+  const t = useT();
   const [userCount, setUserCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function AdminStatsBanner() {
 
   return (
     <p className="font-lora text-xs opacity-90">
-      Registered customers: <span className="font-semibold">{userCount}</span>
+      {t("staff.registeredCustomers")} <span className="font-semibold">{userCount}</span>
     </p>
   );
 }

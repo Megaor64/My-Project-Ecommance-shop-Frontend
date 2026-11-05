@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function subscribeNoop() {
@@ -16,6 +17,7 @@ type ThemeToggleProps = {
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const t = useT();
   const mounted = useSyncExternalStore(
     subscribeNoop,
     () => true,
@@ -24,7 +26,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" aria-label="Toggle theme" disabled />
+      <Button variant="ghost" size="icon" aria-label={t("theme.toggle")} disabled />
     );
   }
 
@@ -34,7 +36,9 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     <Button
       variant="ghost"
       size="icon"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={
+        isDark ? t("theme.switchToLight") : t("theme.switchToDark")
+      }
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn("text-ink hover:text-gold", className)}
     >

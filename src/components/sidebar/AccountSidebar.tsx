@@ -7,17 +7,15 @@ import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import httpClient from "@/lib/httpClient";
 import { selectUser } from "@/features/auth/store/selectors";
 import { fetchMe, logout } from "@/features/auth/store/thunks";
-import {
-  formatOrderDate,
-  orderStatusLabel,
-  type OrderStatus,
-} from "@/features/orders/types";
+import { formatOrderDate, type OrderStatus } from "@/features/orders/types";
 import {
   selectOrders,
   selectOrdersLoading,
 } from "@/features/orders/store/selectors";
 import { cancelOrder, deleteOrder, fetchMyOrders } from "@/features/orders/store/thunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { useLocale, useT, type TranslationKey } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +56,9 @@ function statusBadgeClass(status: OrderStatus): string {
 
 export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
   const dispatch = useAppDispatch();
+  const formatPrice = useFormatPrice();
+  const t = useT();
+  const { locale } = useLocale();
   const user = useAppSelector(selectUser);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -76,7 +77,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
   function loadOrders() {
     void dispatch(fetchMyOrders())
       .unwrap()
-      .catch(() => toast.error("Could not load your orders."));
+      .catch(() => toast.error(t("orders.loadFailed")));
   }
 
   async function handleProfileSave(e: React.FormEvent) {
@@ -89,16 +90,16 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
       if (email.trim() !== user.email) body.email = email.trim();
 
       if (Object.keys(body).length === 0) {
-        toast.message("No changes to save.");
+        toast.message(t("account.noChanges"));
         return;
       }
 
       await httpClient.patch(`/users/${user.id}`, body);
 
       await dispatch(fetchMe()).unwrap();
-      toast.success("Profile updated.");
+      toast.success(t("account.profileUpdated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Update failed");
+      toast.error(err instanceof Error ? err.message : t("account.updateFailed"));
     } finally {
       setIsSavingProfile(false);
     }
@@ -107,19 +108,19 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
   async function handleCancelOrder(orderId: string) {
     try {
       await dispatch(cancelOrder(orderId)).unwrap();
-      toast.success("Order cancelled.");
+      toast.success(t("orders.cancelled"));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not cancel order");
+      toast.error(typeof err === "string" ? err : t("orders.cancelFailed"));
     }
   }
 
   async function handleDeleteOrder(orderId: string) {
-    if (!confirm("Remove this order from your history?")) return;
+    if (!confirm(t("orders.confirmRemove"))) return;
     try {
       await dispatch(deleteOrder(orderId)).unwrap();
-      toast.success("Order removed.");
+      toast.success(t("orders.removed"));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Could not delete order");
+      toast.error(typeof err === "string" ? err : t("orders.removeFailed"));
     }
   }
 
@@ -129,23 +130,23 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         side="right"
-        className="w-full overflow-y-auto border-l border-gold/20 bg-parchment p-0 sm:max-w-md"
+        className="w-full overflow-y-auto border-s border-gold/20 bg-parchment p-0 sm:max-w-md"
       >
-        <SheetHeader className="border-b border-gold/20 px-6 py-5 text-left">
+        <SheetHeader className="border-b border-gold/20 px-6 py-5 text-start">
           <SheetTitle className="font-playfair text-xl text-ink">
-            Your account
+            {t("account.panelTitle")}
           </SheetTitle>
           <SheetDescription className="font-lora text-warm-gray">
-            Profile, preferences, and order history.
+            {t("account.panelDescription")}
           </SheetDescription>
         </SheetHeader>
 
         <Tabs defaultValue="profile" className="px-6 py-4">
           <TabsList className="grid w-full grid-cols-3 font-lora">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="profile">{t("account.tab.profile")}</TabsTrigger>
+            <TabsTrigger value="settings">{t("account.tab.settings")}</TabsTrigger>
             <TabsTrigger value="orders" onPointerDown={loadOrders}>
-              Orders
+              {t("account.tab.orders")}
             </TabsTrigger>
           </TabsList>
 
@@ -153,7 +154,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
             <form onSubmit={handleProfileSave}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="profile-name">Name</FieldLabel>
+                  <FieldLabel htmlFor="profile-name">{t("common.name")}</FieldLabel>
                   <Input
                     id="profile-name"
                     value={name}
@@ -163,7 +164,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="profile-email">Email</FieldLabel>
+                  <FieldLabel htmlFor="profile-email">{t("common.email")}</FieldLabel>
                   <Input
                     id="profile-email"
                     type="email"
@@ -178,7 +179,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                   className="rounded-md"
                   disabled={isSavingProfile}
                 >
-                  {isSavingProfile ? "Saving…" : "Save profile"}
+                  {isSavingProfile ? t("common.saving") : t("account.saveProfile")}
                 </Button>
               </FieldGroup>
             </form>
@@ -186,30 +187,30 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
 
           <TabsContent value="settings" className="mt-6 space-y-4">
             <p className="font-lora text-sm text-warm-gray">
-              Full preferences are saved to your account.
+              {t("account.prefsSaved")}
             </p>
             <div className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-3">
               <div>
-                <p className="font-lora text-sm text-ink">Quick theme</p>
+                <p className="font-lora text-sm text-ink">{t("account.quickTheme")}</p>
                 <p className="font-lora text-xs text-warm-gray">
-                  Syncs when you save in Settings
+                  {t("account.quickThemeHint")}
                 </p>
               </div>
               <ThemeToggle />
             </div>
             <Button variant="outline" className="w-full rounded-md font-lora" asChild>
               <Link href="/account/settings/appearance" onClick={() => onOpenChange(false)}>
-                Appearance & language
+                {t("account.appearanceLink")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full rounded-md font-lora" asChild>
               <Link href="/account/settings/notifications" onClick={() => onOpenChange(false)}>
-                Notifications
+                {t("account.notificationsLink")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full rounded-md font-lora" asChild>
               <Link href="/account/settings/security" onClick={() => onOpenChange(false)}>
-                Password & security
+                {t("account.securityLink")}
               </Link>
             </Button>
             <Button
@@ -218,16 +219,16 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
               className="w-full rounded-md font-lora"
               onClick={() => void dispatch(logout())}
             >
-              Sign out
+              {t("account.signOut")}
             </Button>
           </TabsContent>
 
           <TabsContent value="orders" className="mt-6">
             {ordersLoading ? (
-              <p className="font-lora text-sm text-warm-gray">Loading orders…</p>
+              <p className="font-lora text-sm text-warm-gray">{t("orders.loading")}</p>
             ) : orders.length === 0 ? (
               <p className="font-lora text-sm text-warm-gray">
-                No orders yet. When you place one, it will appear here.
+                {t("orders.empty")}
               </p>
             ) : (
               <ul className="space-y-4">
@@ -239,10 +240,12 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="font-playfair text-sm font-medium text-ink">
-                          Order #{order._id.slice(-6).toUpperCase()}
+                          {t("orders.orderNumber", {
+                            id: order._id.slice(-6).toUpperCase(),
+                          })}
                         </p>
                         <p className="font-lora text-xs text-warm-gray">
-                          {formatOrderDate(order.createdAt)}
+                          {formatOrderDate(order.createdAt, locale)}
                         </p>
                       </div>
                       <Badge
@@ -252,7 +255,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                           statusBadgeClass(order.orderStatus)
                         )}
                       >
-                        {orderStatusLabel(order.orderStatus)}
+                        {t(`orders.status.${order.orderStatus}` as TranslationKey)}
                       </Badge>
                     </div>
                     <ul className="mt-3 space-y-1 font-lora text-sm text-warm-gray">
@@ -263,7 +266,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                       ))}
                     </ul>
                     <p className="mt-2 font-lora text-sm font-medium text-ink">
-                      ${order.totalAmount.toFixed(2)}
+                      {formatPrice(order.totalAmount)}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {order.orderStatus === "processing" && (
@@ -274,7 +277,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                           className="h-8 px-2 font-lora text-destructive"
                           onClick={() => void handleCancelOrder(order._id)}
                         >
-                          Cancel order
+                          {t("orders.cancel")}
                         </Button>
                       )}
                       {order.orderStatus !== "processing" && (
@@ -285,7 +288,7 @@ export function AccountSidebar({ open, onOpenChange }: AccountSidebarProps) {
                           className="h-8 px-2 font-lora text-destructive"
                           onClick={() => void handleDeleteOrder(order._id)}
                         >
-                          Delete
+                          {t("common.delete")}
                         </Button>
                       )}
                     </div>

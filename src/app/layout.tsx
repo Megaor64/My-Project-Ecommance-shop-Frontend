@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Lora, Playfair_Display } from "next/font/google";
+import {
+  Lora,
+  Noto_Sans_Arabic,
+  Noto_Sans_Hebrew,
+  Playfair_Display,
+} from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -19,6 +24,21 @@ const lora = Lora({
   variable: "--font-lora",
 });
 
+// Playfair and Lora are Latin-only. These supply Hebrew / Arabic glyphs through
+// the font-family fallback chain (see globals.css). They are not preloaded: the
+// browser fetches them only when a page actually contains those characters.
+const notoHebrew = Noto_Sans_Hebrew({
+  subsets: ["hebrew"],
+  variable: "--font-noto-hebrew",
+  preload: false,
+});
+
+const notoArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-arabic",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "Folio Books — Literary Bookstore",
   description: "A curated literary bookstore for readers who love the written word.",
@@ -33,7 +53,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("h-full antialiased", playfair.variable, lora.variable)}
+      className={cn(
+        "h-full antialiased",
+        playfair.variable,
+        lora.variable,
+        notoHebrew.variable,
+        notoArabic.variable
+      )}
     >
       <body className="min-h-full flex flex-col bg-parchment font-lora text-ink">
         <ThemeProvider>

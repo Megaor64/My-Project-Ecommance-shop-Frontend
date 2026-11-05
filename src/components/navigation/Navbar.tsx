@@ -12,6 +12,8 @@ import {
 } from "@/features/auth/store/selectors";
 import { useAppSelector } from "@/store/hooks";
 import { useSearch } from "@/components/providers/SearchProvider";
+import { isSearchablePath } from "@/lib/searchUrl";
+import { useT } from "@/lib/i18n";
 import { NavLinks } from "@/components/navigation/NavLinks";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -25,9 +27,10 @@ export function Navbar() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isAdmin = useAppSelector(selectIsAdmin);
   const { setSearchOpen } = useSearch();
+  const t = useT();
 
   function handleSearchClick() {
-    if (pathname === "/") {
+    if (!isSearchablePath(pathname)) {
       router.push("/books");
     }
     setSearchOpen(true);
@@ -48,17 +51,17 @@ export function Navbar() {
             href="/"
             className="font-playfair text-xl font-semibold tracking-tight text-ink sm:text-2xl"
           >
-            Folio
+            {t("brand.name")}
           </Link>
         </div>
 
-        <NavLinks className="pointer-events-none absolute left-1/2 hidden max-w-[min(100%,36rem)] -translate-x-1/2 px-2 xl:pointer-events-auto xl:flex" />
+        <NavLinks className="pointer-events-none absolute start-1/2 hidden max-w-[min(100%,36rem)] -translate-x-1/2 px-2 rtl:translate-x-1/2 xl:pointer-events-auto xl:flex" />
 
-        <div className="relative z-10 ml-auto flex shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1">
+        <div className="relative z-10 ms-auto flex shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1">
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Open search"
+            aria-label={t("nav.openSearch")}
             className="shrink-0 text-ink hover:text-gold"
             onClick={handleSearchClick}
           >
@@ -74,7 +77,7 @@ export function Navbar() {
                 size="icon"
                 className="shrink-0 rounded-md border-burgundy/40 text-burgundy hover:bg-burgundy hover:text-cream xl:hidden"
               >
-                <Link href="/admin/inquiries" aria-label="Admin dashboard">
+                <Link href="/admin/inquiries" aria-label={t("nav.adminDashboard")}>
                   <LayoutDashboard className="size-4" />
                 </Link>
               </Button>
@@ -84,12 +87,12 @@ export function Navbar() {
                 size="sm"
                 className="hidden shrink-0 rounded-md border-burgundy/40 font-lora normal-case tracking-normal text-burgundy hover:bg-burgundy hover:text-cream xl:inline-flex"
               >
-                <Link href="/admin/inquiries">AdminFront</Link>
+                <Link href="/admin/inquiries">{t("nav.adminFront")}</Link>
               </Button>
             </>
           ) : null}
           {!isLoading && isAuthenticated && user ? (
-            <Link href="/account" aria-label="Account" className="shrink-0">
+            <Link href="/account" aria-label={t("nav.account")} className="shrink-0">
               <Avatar className="size-9 border border-gold/40">
                 <AvatarFallback className="bg-cream font-lora text-xs text-ink">
                   {initials ?? <User className="size-4" />}
@@ -104,7 +107,7 @@ export function Navbar() {
                 size="icon"
                 className="shrink-0 rounded-md border-ink/20 sm:hidden"
               >
-                <Link href="/login" aria-label="Sign in">
+                <Link href="/login" aria-label={t("nav.signInAria")}>
                   <User className="size-4" />
                 </Link>
               </Button>
@@ -114,7 +117,7 @@ export function Navbar() {
                 size="sm"
                 className="hidden shrink-0 rounded-md border-ink/20 font-lora normal-case tracking-normal sm:inline-flex"
               >
-                <Link href="/login">Sign In</Link>
+                <Link href="/login">{t("nav.signIn")}</Link>
               </Button>
             </>
           )}

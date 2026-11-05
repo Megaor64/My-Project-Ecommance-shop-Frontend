@@ -1,77 +1,79 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
 import type { Book } from "@/features/products/types";
 import { mapProductToBook } from "@/features/products/utils/mapProductToBook";
 import * as productService from "@/features/products/services/productService";
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    return axiosError.response?.data?.message ?? fallback;
-  }
-  if (error instanceof Error) return error.message;
-  return fallback;
-}
+import { rejectMessage } from "@/lib/i18n";
+import type { RootState } from "@/store";
 
 export const fetchProducts = createAsyncThunk<
   Book[],
   void,
-  { rejectValue: string }
->("products/fetchAll", async (_, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("products/fetchAll", async (_, { getState, rejectWithValue }) => {
   try {
     return await productService.fetchProducts();
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to load products"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.products.loadFailed")
+    );
   }
 });
 
 export const fetchProductById = createAsyncThunk<
   Book,
   string,
-  { rejectValue: string }
->("products/fetchById", async (id, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("products/fetchById", async (id, { getState, rejectWithValue }) => {
   try {
     return await productService.fetchProductById(id);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to load product"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "book.loadFailed")
+    );
   }
 });
 
 export const createProduct = createAsyncThunk<
   Book,
   FormData,
-  { rejectValue: string }
->("products/create", async (formData, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("products/create", async (formData, { getState, rejectWithValue }) => {
   try {
     const product = await productService.createProduct(formData);
     return mapProductToBook(product);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to create product"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.products.saveFailed")
+    );
   }
 });
 
 export const updateProduct = createAsyncThunk<
   Book,
   { id: string; formData: FormData },
-  { rejectValue: string }
->("products/update", async ({ id, formData }, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("products/update", async ({ id, formData }, { getState, rejectWithValue }) => {
   try {
     const product = await productService.updateProduct(id, formData);
     return mapProductToBook(product);
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to update product"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.products.saveFailed")
+    );
   }
 });
 
 export const deleteProduct = createAsyncThunk<
   string,
   string,
-  { rejectValue: string }
->("products/delete", async (id, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("products/delete", async (id, { getState, rejectWithValue }) => {
   try {
     await productService.deleteProduct(id);
     return id;
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, "Failed to delete product"));
+    return rejectWithValue(
+      rejectMessage(error, getState(), "admin.products.deleteFailed")
+    );
   }
 });

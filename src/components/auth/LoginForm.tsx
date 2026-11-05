@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 import { login } from "@/features/auth/store/thunks";
 import { syncGuestCart } from "@/features/cart/store/thunks";
 import {
   isUnverifiedUserError,
-  UNVERIFIED_USER_MESSAGE,
   verifyEmailPath,
 } from "@/lib/auth-errors";
 import { AdminPortalLinks } from "@/components/auth/AdminPortalLinks";
@@ -41,6 +41,7 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -54,22 +55,22 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
         login({ email, password, remember })
       ).unwrap();
       if (!result.user) {
-        throw new Error("Login failed");
+        throw new Error(t("auth.loginFailed"));
       }
       await dispatch(syncGuestCart()).unwrap().catch(() => undefined);
-      toast.success("Welcome back.");
+      toast.success(t("auth.welcomeBack"));
       router.push(getPostLoginPath(searchParams.get("from")));
     } catch (err) {
-      const message = typeof err === "string" ? err : "Login failed";
+      const message = typeof err === "string" ? err : t("auth.loginFailed");
       if (isUnverifiedUserError(message) && email.trim()) {
         toast.error(
           <span className="font-lora">
-            {UNVERIFIED_USER_MESSAGE}{" "}
+            {t("auth.unverifiedUser")}{" "}
             <Link
               href={verifyEmailPath(email.trim())}
               className="font-semibold text-gold underline underline-offset-4 hover:opacity-90"
             >
-              Verify your email
+              {t("auth.verifyYourEmailLink")}
             </Link>
           </span>
         );
@@ -83,12 +84,15 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
 
   async function handleGoogleSuccess() {
     await dispatch(syncGuestCart()).unwrap().catch(() => undefined);
-    toast.success("Welcome back.");
+    toast.success(t("auth.welcomeBack"));
     router.push(getPostLoginPath(searchParams.get("from")));
   }
 
   return (
-    <AuthShell title="Sign in" subtitle="Return to your reading list.">
+    <AuthShell
+      title={t("auth.signIn")}
+      subtitle={t("auth.signInSubtitle")}
+    >
       <GoogleSignInButton
         intent="customer"
         remember={remember}
@@ -98,7 +102,7 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
       <form onSubmit={handleSubmit}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email">{t("common.email")}</FieldLabel>
             <Input
               id="email"
               type="email"
@@ -109,7 +113,7 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password">{t("common.password")}</FieldLabel>
             <Input
               id="password"
               type="password"
@@ -126,7 +130,7 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
               onCheckedChange={(v) => setRemember(v === true)}
             />
             <Label htmlFor="remember" className="font-lora text-sm font-normal">
-              Remember me
+              {t("auth.rememberMe")}
             </Label>
           </div>
           <Button
@@ -134,14 +138,14 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
             className="w-full rounded-md"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in…" : "Sign in"}
+            {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
           </Button>
         </FieldGroup>
       </form>
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
-        New here?{" "}
+        {t("auth.newHere")}{" "}
         <Link href="/register" className="text-gold underline-offset-4 hover:underline">
-          Create an account
+          {t("auth.createAccountLink")}
         </Link>
       </p>
       <DemoLoginButton />

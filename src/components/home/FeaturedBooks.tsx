@@ -11,9 +11,13 @@ import {
   selectProductsLoading,
 } from "@/features/products/store/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function FeaturedBooks() {
+  const formatPrice = useFormatPrice();
+  const t = useT();
   const dispatch = useAppDispatch();
   const books = useAppSelector(selectBooks);
   const loading = useAppSelector(selectProductsLoading);
@@ -33,10 +37,10 @@ export function FeaturedBooks() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:flex-wrap sm:items-end">
           <div>
             <p className="font-lora text-sm uppercase tracking-[0.2em] text-gold">
-              Curated picks
+              {t("featured.eyebrow")}
             </p>
             <h2 className="mt-2 font-playfair text-3xl font-semibold text-ink md:text-4xl">
-              Featured volumes
+              {t("featured.title")}
             </h2>
           </div>
           <Button
@@ -44,13 +48,13 @@ export function FeaturedBooks() {
             variant="outline"
             className="rounded-md border-ink/20 font-lora normal-case tracking-normal"
           >
-            <Link href="/books">View all books</Link>
+            <Link href="/books">{t("featured.viewAll")}</Link>
           </Button>
         </div>
 
         {loading && featured.length === 0 ? (
           <p className="mt-12 font-lora text-center text-warm-gray">
-            Loading featured books…
+            {t("featured.loading")}
           </p>
         ) : error ? (
           <p className="mt-12 font-lora text-center text-destructive" role="alert">
@@ -58,7 +62,7 @@ export function FeaturedBooks() {
           </p>
         ) : featured.length === 0 ? (
           <p className="mt-12 font-lora text-center text-warm-gray">
-            No books in the catalog yet.
+            {t("featured.empty")}
           </p>
         ) : (
           <ul className="mt-12 space-y-16">
@@ -74,7 +78,7 @@ export function FeaturedBooks() {
                 >
                   <BookCard3D book={book} className="mx-auto md:mx-0" />
                   <div
-                    className={cn("max-w-md", reversed ? "md:mr-auto" : "md:ml-auto")}
+                    className={cn("max-w-md", reversed ? "md:me-auto" : "md:ms-auto")}
                   >
                     <p className="font-lora text-xs uppercase tracking-widest text-gold">
                       {book.genre}
@@ -83,13 +87,13 @@ export function FeaturedBooks() {
                       {book.title}
                     </h3>
                     <p className="mt-1 font-lora text-sm text-warm-gray">
-                      by {book.author}
+                      {t("book.byAuthor", { author: book.author })}
                     </p>
                     <p className="mt-4 font-lora text-sm leading-relaxed text-warm-gray line-clamp-4">
                       {book.description}
                     </p>
                     <p className="mt-4 font-playfair text-lg text-gold">
-                      ${book.price.toFixed(2)}
+                      {formatPrice(book.price)}
                     </p>
                   </div>
                 </li>

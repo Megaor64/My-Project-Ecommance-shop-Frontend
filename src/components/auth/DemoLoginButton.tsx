@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { demoLogin } from "@/features/auth/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 
 export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
@@ -16,6 +17,7 @@ const DEMO_SITE_URL = (process.env.NEXT_PUBLIC_DEMO_SITE_URL ?? "")
 export function DemoLoginButton() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useT();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const autoStarted = useRef(false);
 
@@ -23,10 +25,10 @@ export function DemoLoginButton() {
     setIsSubmitting(true);
     try {
       await dispatch(demoLogin()).unwrap();
-      toast.success("Signed in to the read-only admin demo.");
+      toast.success(t("auth.demoSignedIn"));
       router.push("/admin/inquiries");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Demo login failed");
+      toast.error(typeof err === "string" ? err : t("auth.demoFailed"));
       setIsSubmitting(false);
     }
   }
@@ -57,7 +59,7 @@ export function DemoLoginButton() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Try Admin Demo
+          {t("auth.tryAdminDemo")}
         </a>
       </Button>
     );
@@ -71,7 +73,7 @@ export function DemoLoginButton() {
       disabled={isSubmitting}
       onClick={() => void handleClick()}
     >
-      {isSubmitting ? "Opening demo…" : "Try Admin Demo"}
+      {isSubmitting ? t("auth.openingDemo") : t("auth.tryAdminDemo")}
     </Button>
   );
 }

@@ -10,6 +10,7 @@ import { selectUser } from "@/features/auth/store/selectors";
 import type { NotificationSettings } from "@/features/settings/types";
 import { selectSettingsSaveStatus, selectSettings } from "@/features/settings/store/selectors";
 import { updateNotifications } from "@/features/settings/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type NotificationsFormProps = {
@@ -46,6 +47,7 @@ function ToggleRow({
 
 export function NotificationsForm({ initialValues }: NotificationsFormProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector(selectUser);
   const settings = useAppSelector(selectSettings);
   const saveStatus = useAppSelector(selectSettingsSaveStatus);
@@ -60,7 +62,9 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
   }, [resolved]);
 
   if (!form) {
-    return <p className="font-lora text-warm-gray">טוען הגדרות…</p>;
+    return (
+      <p className="font-lora text-warm-gray">{t("settings.loadingSettings")}</p>
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -70,19 +74,21 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
       await dispatch(
         updateNotifications({ userId: user.id, notifications: form })
       ).unwrap();
-      toast.success("העדפות ההתראות נשמרו");
+      toast.success(t("settings.notifications.saved"));
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "שמירה נכשלה");
+      toast.error(typeof err === "string" ? err : t("settings.saveFailed"));
     }
   }
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
       <section className="space-y-3">
-        <h2 className="font-playfair text-lg text-ink">דוא״ל</h2>
+        <h2 className="font-playfair text-lg text-ink">
+          {t("settings.notifications.email")}
+        </h2>
         <ToggleRow
           id="email-order-updates"
-          label="עדכוני הזמנה"
+          label={t("settings.notifications.orderUpdates")}
           checked={form.email.orderUpdates}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -94,7 +100,7 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
         />
         <ToggleRow
           id="email-marketing"
-          label="שיווק"
+          label={t("settings.notifications.marketing")}
           checked={form.email.marketing}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -104,7 +110,7 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
         />
         <ToggleRow
           id="email-newsletter"
-          label="ניוזלטר"
+          label={t("settings.notifications.newsletter")}
           checked={form.email.newsletter}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -117,10 +123,12 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-playfair text-lg text-ink">דפדפן</h2>
+        <h2 className="font-playfair text-lg text-ink">
+          {t("settings.notifications.browser")}
+        </h2>
         <ToggleRow
           id="browser-order-updates"
-          label="עדכוני הזמנה"
+          label={t("settings.notifications.orderUpdates")}
           checked={form.browser.orderUpdates}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -135,7 +143,7 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
         />
         <ToggleRow
           id="browser-promotions"
-          label="מבצעים"
+          label={t("settings.notifications.promotions")}
           checked={form.browser.promotions}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -148,10 +156,12 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-playfair text-lg text-ink">SMS</h2>
+        <h2 className="font-playfair text-lg text-ink">
+          {t("settings.notifications.sms")}
+        </h2>
         <div>
           <Label htmlFor="sms-phone" className="font-lora text-sm">
-            מספר טלפון
+            {t("settings.notifications.phone")}
           </Label>
           <Input
             id="sms-phone"
@@ -165,11 +175,12 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
             }
             className="mt-1 font-lora"
             placeholder="+972..."
+            dir="ltr"
           />
         </div>
         <ToggleRow
           id="sms-order-updates"
-          label="עדכוני הזמנה"
+          label={t("settings.notifications.orderUpdates")}
           checked={form.sms.orderUpdates}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -181,7 +192,7 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
         />
         <ToggleRow
           id="sms-promotions"
-          label="מבצעים"
+          label={t("settings.notifications.promotions")}
           checked={form.sms.promotions}
           onCheckedChange={(checked) =>
             setForm((prev) =>
@@ -198,7 +209,9 @@ export function NotificationsForm({ initialValues }: NotificationsFormProps) {
         className="rounded-md"
         disabled={saveStatus === "loading"}
       >
-        {saveStatus === "loading" ? "שומר…" : "שמור התראות"}
+        {saveStatus === "loading"
+          ? t("common.saving")
+          : t("settings.notifications.save")}
       </Button>
     </form>
   );

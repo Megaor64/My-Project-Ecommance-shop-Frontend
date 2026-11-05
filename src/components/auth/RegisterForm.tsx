@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { register } from "@/features/auth/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 import { AdminPortalLinks } from "@/components/auth/AdminPortalLinks";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -26,6 +27,7 @@ type RegisterFormProps = {
 export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useT();
   const [step, setStep] = useState<"register" | "verify">("register");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -36,11 +38,11 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
+      toast.error(t("auth.passwordsMismatch"));
       return;
     }
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+      toast.error(t("auth.passwordTooShort"));
       return;
     }
 
@@ -49,11 +51,11 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
       const result = await dispatch(
         register({ name, email, password })
       ).unwrap();
-      toast.success("Check your email for a verification code.");
+      toast.success(t("auth.checkEmailForCode"));
       setEmail(result.email);
       setStep("verify");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Registration failed");
+      toast.error(typeof err === "string" ? err : t("auth.registrationFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -62,8 +64,8 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
   if (step === "verify") {
     return (
       <AuthShell
-        title="Verify your email"
-        subtitle="Enter the code we sent to complete registration."
+        title={t("verify.title")}
+        subtitle={t("verify.subtitleRegister")}
       >
         <VerifyEmailStep
           email={email}
@@ -71,7 +73,7 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
         />
         <p className="mt-6 text-center font-lora text-sm text-warm-gray">
           <Link href="/login" className="text-gold hover:underline">
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </p>
       </AuthShell>
@@ -80,12 +82,15 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
 
   async function handleGoogleSuccess() {
     await dispatch(syncGuestCart()).unwrap().catch(() => undefined);
-    toast.success("Account ready. Welcome to Folio.");
+    toast.success(t("auth.accountReady"));
     router.push("/");
   }
 
   return (
-    <AuthShell title="Create account" subtitle="Join Folio and discover your next read.">
+    <AuthShell
+      title={t("auth.createAccount")}
+      subtitle={t("auth.createAccountSubtitle")}
+    >
       <GoogleSignInButton
         intent="customer"
         disabled={isSubmitting}
@@ -94,7 +99,7 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
       <form onSubmit={handleRegister}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="name">Name</FieldLabel>
+            <FieldLabel htmlFor="name">{t("common.name")}</FieldLabel>
             <Input
               id="name"
               required
@@ -103,7 +108,7 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email">{t("common.email")}</FieldLabel>
             <Input
               id="email"
               type="email"
@@ -114,7 +119,7 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password">{t("common.password")}</FieldLabel>
             <Input
               id="password"
               type="password"
@@ -125,7 +130,7 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="confirm">Confirm password</FieldLabel>
+            <FieldLabel htmlFor="confirm">{t("common.confirmPassword")}</FieldLabel>
             <Input
               id="confirm"
               type="password"
@@ -140,14 +145,14 @@ export function RegisterForm({ showAdminRegister = false }: RegisterFormProps) {
             className="w-full rounded-md"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating account…" : "Create account"}
+            {isSubmitting ? t("auth.creatingAccount") : t("auth.createAccount")}
           </Button>
         </FieldGroup>
       </form>
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
-        Already have an account?{" "}
+        {t("auth.alreadyHaveAccount")}{" "}
         <Link href="/login" className="text-gold hover:underline">
-          Sign in
+          {t("auth.signIn")}
         </Link>
       </p>
       <AdminPortalLinks

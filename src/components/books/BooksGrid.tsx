@@ -3,6 +3,7 @@
 import { BookCard3D } from "@/components/books/BookCard3D";
 import { useSearch } from "@/components/providers/SearchProvider";
 import type { Book } from "@/features/products/types";
+import { useT } from "@/lib/i18n";
 
 type BooksGridProps = {
   books: Book[];
@@ -10,12 +11,13 @@ type BooksGridProps = {
 
 export function BooksGrid({ books: allBooks }: BooksGridProps) {
   const { filter } = useSearch();
+  const t = useT();
   const books = filter(allBooks);
 
   if (books.length === 0) {
     return (
       <p className="font-lora text-center text-warm-gray">
-        No books match your search. Try adjusting filters.
+        {t("books.noMatch")}
       </p>
     );
   }

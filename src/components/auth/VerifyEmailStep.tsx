@@ -15,6 +15,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { resendVerification, verifyEmail } from "@/features/auth/store/thunks";
+import { useT } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
 
 type VerifyEmailStepProps = {
@@ -27,6 +28,7 @@ export function VerifyEmailStep({
   onVerified,
 }: VerifyEmailStepProps) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -35,14 +37,12 @@ export function VerifyEmailStep({
     setIsResending(true);
     try {
       await dispatch(resendVerification({ email })).unwrap();
-      toast.success("A new verification code was sent to your email.");
+      toast.success(t("verify.resent"));
     } catch (err) {
       const message =
-        typeof err === "string" ? err : "Could not send verification code";
+        typeof err === "string" ? err : t("verify.sendFailed");
       if (message === "Not found") {
-        toast.error(
-          "Resend is not available on the server yet. Redeploy the backend, or use the code from your registration email."
-        );
+        toast.error(t("verify.resendUnavailable"));
       } else {
         toast.error(message);
       }
@@ -54,17 +54,17 @@ export function VerifyEmailStep({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (code.length !== 6) {
-      toast.error("Enter the 6-digit code from your email.");
+      toast.error(t("verify.enterCode"));
       return;
     }
 
     setIsSubmitting(true);
     try {
       await dispatch(verifyEmail({ email, code })).unwrap();
-      toast.success("Email verified. You can sign in now.");
+      toast.success(t("verify.success"));
       onVerified();
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Verification failed");
+      toast.error(typeof err === "string" ? err : t("verify.failed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -74,9 +74,9 @@ export function VerifyEmailStep({
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel>Verification code</FieldLabel>
+          <FieldLabel>{t("verify.codeLabel")}</FieldLabel>
           <FieldDescription>
-            We sent a 6-digit code to {email}.
+            {t("verify.codeSent", { email })}
           </FieldDescription>
           <InputOTP maxLength={6} value={code} onChange={setCode}>
             <InputOTPGroup>
@@ -87,7 +87,7 @@ export function VerifyEmailStep({
           </InputOTP>
         </Field>
         <Button type="submit" className="w-full rounded-md" disabled={isSubmitting}>
-          {isSubmitting ? "Verifying…" : "Verify email"}
+          {isSubmitting ? t("verify.verifying") : t("verify.submit")}
         </Button>
         <Button
           type="button"
@@ -96,7 +96,7 @@ export function VerifyEmailStep({
           disabled={isResending || isSubmitting}
           onClick={() => void handleResend()}
         >
-          {isResending ? "Sending code…" : "Resend code"}
+          {isResending ? t("verify.sendingCode") : t("verify.resend")}
         </Button>
       </FieldGroup>
     </form>

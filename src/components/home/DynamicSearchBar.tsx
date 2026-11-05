@@ -7,7 +7,9 @@ import { useSearch } from "@/components/providers/SearchProvider";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { buildSearchUrl, getSearchPage } from "@/lib/searchUrl";
+import { buildSearchUrl, getSearchPage, normalizePath } from "@/lib/searchUrl";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const SCROLL_THRESHOLD = 0.75;
@@ -15,6 +17,8 @@ const SCROLL_THRESHOLD = 0.75;
 export function DynamicSearchBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const formatPrice = useFormatPrice();
+  const t = useT();
   const {
     query,
     maxPrice,
@@ -41,10 +45,10 @@ export function DynamicSearchBar() {
   function handleSearch() {
     const page = getSearchPage(pathname);
     const url = buildSearchUrl(page, query, maxPrice);
-    if (pathname === page) {
-      router.replace(url);
+    if (normalizePath(pathname) === page) {
+      router.replace(url, { scroll: false });
     } else {
-      router.push(url);
+      router.push(url, { scroll: false });
     }
     setSearchOpen(true);
   }
@@ -59,7 +63,11 @@ export function DynamicSearchBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const show = (visibleByScroll || isSearchOpen) && !dismissed;
+  // Latch open while a search is active so a shorter result page (which lowers
+  // scrollY) cannot hide the bar. Only the close button dismisses it.
+  const hasActiveFilters = query.trim() !== "" || maxPrice > 0;
+  const show =
+    !dismissed && (isSearchOpen || hasActiveFilters || visibleByScroll);
 
   return (
     <div
@@ -70,12 +78,12 @@ export function DynamicSearchBar() {
           : "pointer-events-none -translate-y-full opacity-0"
       )}
       role="search"
-      aria-label="Book search"
+      aria-label={t("search.region")}
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Input
           type="search"
-          placeholder="Search by title or author…"
+          placeholder={t("search.placeholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -85,11 +93,13 @@ export function DynamicSearchBar() {
             }
           }}
           className="min-w-0 flex-1 rounded-md border-ink/15 bg-cream font-lora normal-case tracking-normal sm:min-w-[12rem]"
-          aria-label="Search books"
+          aria-label={t("search.inputLabel")}
         />
         <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:min-w-[10rem] sm:basis-auto">
           <span className="shrink-0 font-lora text-xs text-warm-gray">
-            Max ${maxPrice > 0 ? maxPrice : "any"}
+            {maxPrice > 0
+              ? t("search.maxPrice", { price: formatPrice(maxPrice) })
+              : t("search.maxAny")}
           </span>
           <Slider
             min={0}
@@ -98,7 +108,7 @@ export function DynamicSearchBar() {
             value={[maxPrice]}
             onValueChange={([v]) => setMaxPrice(v ?? 0)}
             className="min-w-0 flex-1"
-            aria-label="Maximum price"
+            aria-label={t("search.maxPriceAria")}
           />
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -108,7 +118,7 @@ export function DynamicSearchBar() {
             className="rounded-md font-lora normal-case tracking-normal"
             onClick={handleSearch}
           >
-            Search
+            {t("search.submit")}
           </Button>
           <Button
             type="button"
@@ -117,13 +127,13 @@ export function DynamicSearchBar() {
             className="font-lora normal-case tracking-normal"
             onClick={clearSearch}
           >
-            Clear
+            {t("search.clear")}
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Close search"
+            aria-label={t("search.close")}
             onClick={handleClose}
           >
             <X className="size-4" />

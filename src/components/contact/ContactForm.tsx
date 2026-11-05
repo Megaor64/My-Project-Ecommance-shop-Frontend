@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import httpClient from "@/lib/httpClient";
+import { useT } from "@/lib/i18n";
 import {
   Field,
   FieldGroup,
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ContactForm() {
+  const t = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
@@ -24,14 +26,14 @@ export function ContactForm() {
     setIsSubmitting(true);
     try {
       await httpClient.post("/inquiries", { name, email, subject, message });
-      toast.success("Your message has been sent. We'll reply soon.");
+      toast.success(t("contact.sent"));
       setName("");
       setEmail("");
       setSubject("");
       setMessage("");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Could not send your message."
+        err instanceof Error ? err.message : t("contact.failed")
       );
     } finally {
       setIsSubmitting(false);
@@ -46,7 +48,7 @@ export function ContactForm() {
       <FieldGroup>
         <div className="grid gap-6 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="contact-name">Name</FieldLabel>
+            <FieldLabel htmlFor="contact-name">{t("common.name")}</FieldLabel>
             <Input
               id="contact-name"
               required
@@ -56,7 +58,7 @@ export function ContactForm() {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="contact-email">Email</FieldLabel>
+            <FieldLabel htmlFor="contact-email">{t("common.email")}</FieldLabel>
             <Input
               id="contact-email"
               type="email"
@@ -69,7 +71,7 @@ export function ContactForm() {
           </Field>
         </div>
         <Field>
-          <FieldLabel htmlFor="contact-subject">Subject</FieldLabel>
+          <FieldLabel htmlFor="contact-subject">{t("common.subject")}</FieldLabel>
           <Input
             id="contact-subject"
             required
@@ -79,7 +81,7 @@ export function ContactForm() {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="contact-message">Message</FieldLabel>
+          <FieldLabel htmlFor="contact-message">{t("common.message")}</FieldLabel>
           <Textarea
             id="contact-message"
             required
@@ -94,7 +96,7 @@ export function ContactForm() {
           className="w-full rounded-md sm:w-auto"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Sending…" : "Send message"}
+          {isSubmitting ? t("contact.sending") : t("contact.send")}
         </Button>
       </FieldGroup>
     </form>
