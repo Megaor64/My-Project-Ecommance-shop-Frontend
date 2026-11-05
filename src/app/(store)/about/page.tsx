@@ -2,30 +2,23 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "About — Folio Books",
-  description: "The story behind Folio — a literary bookstore built on recommendation.",
+  description: "Folio is a finalized student project about literary bookstore.",
 };
 
 export default function AboutPage() {
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 md:py-16">
-      <p className="font-lora text-sm uppercase tracking-[0.2em] text-gold">Our story</p>
+      <p className="font-lora text-sm uppercase tracking-[0.2em] text-gold">My story</p>
       <h1 className="mt-3 font-playfair text-3xl font-semibold text-ink md:text-4xl">
-        A room for readers
+        The website's story
       </h1>
       <div className="mt-8 space-y-6 font-lora text-base leading-relaxed text-warm-gray">
         <p>
-          Folio began as a single shelf in a Portland attic — a place where friends
-          traded paperbacks and argued gently about endings. Today we are still that
-          room, only larger: a bookstore built on recommendation, not algorithm.
+        Folio is a finalized student project that showcases my skills and knowledge as a Full-Stack Developer.
+        It is a fully functional webstore designed to demonstrate my ability to build modern web applications, combining both Front-End and Back-End development.
         </p>
         <p>
-          Every title on our shelves is chosen by people who read for pleasure and
-          profession. We favor independent presses, translated voices, and books that
-          reward a second reading.
-        </p>
-        <p>
-          Whether you visit in person or browse from home, we hope you leave with
-          something unexpected and exactly right.
+        Folio is free to explore, so feel welcome to browse the website and discover what it has to offer!        
         </p>
       </div>
     </article>

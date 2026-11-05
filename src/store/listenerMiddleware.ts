@@ -4,6 +4,7 @@ import httpClient from "@/lib/httpClient";
 import { clearCredentials } from "@/features/auth/store/slice";
 import {
   adminVerify2fa,
+  demoLogin,
   googleAuth,
   login,
   logout,
@@ -48,6 +49,7 @@ export function setupHttpClientAuth(
       login.fulfilled,
       adminVerify2fa.fulfilled,
       googleAuth.fulfilled,
+      demoLogin.fulfilled,
       logout.fulfilled,
       clearCredentials
     ),
@@ -62,6 +64,10 @@ export function setupHttpClientAuth(
       }
       if (googleAuth.fulfilled.match(action)) {
         setAuthToken(action.payload.accessToken, action.meta.arg.remember);
+        return;
+      }
+      if (demoLogin.fulfilled.match(action)) {
+        setAuthToken(action.payload.accessToken, false);
         return;
       }
       if (logout.fulfilled.match(action) || clearCredentials.match(action)) {

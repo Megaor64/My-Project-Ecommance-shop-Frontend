@@ -6,6 +6,7 @@ import {
   selectAuthLoading,
   selectUser,
 } from "@/features/auth/store/selectors";
+import { isAdminRole } from "@/lib/auth";
 import { useAppSelector } from "@/store/hooks";
 
 type RouteGuardProps = {
@@ -33,7 +34,7 @@ export function RouteGuard({
       return;
     }
 
-    if (requireAdmin && user.role !== "admin") {
+    if (requireAdmin && !isAdminRole(user.role)) {
       router.replace("/admin/login");
     }
   }, [isLoading, user, router, pathname, loginPath, requireAdmin]);
@@ -42,7 +43,7 @@ export function RouteGuard({
     return <p className="font-lora text-warm-gray">Loading…</p>;
   }
 
-  if (!user || (requireAdmin && user.role !== "admin")) {
+  if (!user || (requireAdmin && !isAdminRole(user.role))) {
     return null;
   }
 

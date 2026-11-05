@@ -1,4 +1,8 @@
-export type UserRole = "customer" | "admin";
+export type UserRole = "customer" | "admin" | "demo-admin";
+
+export function isAdminRole(role: unknown): role is "admin" | "demo-admin" {
+  return role === "admin" || role === "demo-admin";
+}
 
 export type AuthUser = {
   id: string;
@@ -18,7 +22,7 @@ export function isAuthUser(value: unknown): value is AuthUser {
     typeof u.id === "string" &&
     typeof u.name === "string" &&
     typeof u.email === "string" &&
-    (u.role === "customer" || u.role === "admin")
+    (u.role === "customer" || isAdminRole(u.role))
   );
 }
 
@@ -27,6 +31,6 @@ export function mapExpressUser(doc: Record<string, unknown>): AuthUser {
     id: String(doc._id ?? doc.id),
     name: String(doc.name ?? ""),
     email: String(doc.email ?? ""),
-    role: (doc.role === "admin" ? "admin" : "customer") as UserRole,
+    role: (isAdminRole(doc.role) ? doc.role : "customer") as UserRole,
   };
 }

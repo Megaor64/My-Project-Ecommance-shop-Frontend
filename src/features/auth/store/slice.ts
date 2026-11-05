@@ -3,6 +3,7 @@ import type { AuthUser } from "@/lib/auth";
 import {
   adminLogin,
   adminVerify2fa,
+  demoLogin,
   fetchMe,
   googleAuth,
   login,
@@ -133,6 +134,17 @@ const authSlice = createSlice({
       })
       .addCase(googleAuth.rejected, (state, action) => {
         setFailed(state, action.payload ?? "Google sign-in failed");
+      })
+
+      .addCase(demoLogin.pending, setLoading)
+      .addCase(demoLogin.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.accessToken;
+        state.status = "succeeded";
+        state.error = null;
+      })
+      .addCase(demoLogin.rejected, (state, action) => {
+        setFailed(state, action.payload ?? "Demo login failed");
       })
 
       .addCase(fetchMe.pending, (state) => {

@@ -56,7 +56,7 @@ export type AdminUser = {
   _id: string;
   name: string;
   email: string;
-  role: "customer" | "admin";
+  role: "customer" | "admin" | "demo-admin";
   isVerified: boolean;
   isActive?: boolean;
   createdAt?: string;

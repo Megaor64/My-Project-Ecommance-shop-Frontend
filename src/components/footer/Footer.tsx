@@ -63,7 +63,7 @@ export function Footer() {
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 font-lora text-xs text-warm-gray sm:flex-row">
           <p>© {new Date().getFullYear()} Folio Books. All rights reserved.</p>
-          {role === "admin" ? (
+          {role === "admin" || role === "demo-admin" ? (
             <Link
               href="/admin/inquiries"
               className="text-gold hover:underline"

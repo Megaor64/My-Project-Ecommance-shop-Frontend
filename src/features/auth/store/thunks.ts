@@ -128,6 +128,19 @@ export const adminVerify2fa = createAsyncThunk<
   }
 });
 
+export const demoLogin = createAsyncThunk<
+  AuthLoginResponse,
+  void,
+  { rejectValue: string }
+>("auth/demoLogin", async (_, { rejectWithValue }) => {
+  try {
+    const data = await authService.demoLogin();
+    return assertLoginResponse(data);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, "Demo login failed"));
+  }
+});
+
 export const fetchMe = createAsyncThunk<AuthUser, void, { rejectValue: string }>(
   "auth/fetchMe",
   async (_, { rejectWithValue }) => {

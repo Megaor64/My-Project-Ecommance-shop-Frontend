@@ -138,6 +138,15 @@ export async function fetchMe() {
   return fetchUserByAccessToken(token);
 }
 
+export async function demoLogin() {
+  const { data } = await httpClient.post<unknown>("/auth/demo-login");
+  const accessToken = extractAccessToken(data);
+  if (!accessToken) {
+    throw new Error("Demo login failed");
+  }
+  return buildLoginResponse(data, accessToken);
+}
+
 export type GoogleAuthIntent = "customer" | "admin-login" | "admin-register";
 
 export async function googleAuth(payload: {

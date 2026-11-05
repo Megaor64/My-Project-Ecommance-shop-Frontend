@@ -23,6 +23,7 @@ import {
   verifyEmailPath,
 } from "@/lib/auth-errors";
 import { AdminPortalLinks } from "@/components/auth/AdminPortalLinks";
+import { DemoLoginButton } from "@/components/auth/DemoLoginButton";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 type LoginFormProps = {
@@ -143,6 +144,7 @@ export function LoginForm({ showAdminLogin = true }: LoginFormProps) {
           Create an account
         </Link>
       </p>
+      <DemoLoginButton />
       <AdminPortalLinks showAdminLogin={showAdminLogin} />
     </AuthShell>
   );

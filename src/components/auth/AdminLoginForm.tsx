@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { AdminPortalLinks } from "@/components/auth/AdminPortalLinks";
+import { DemoLoginButton } from "@/components/auth/DemoLoginButton";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { adminLogin, adminVerify2fa } from "@/features/auth/store/thunks";
 import { syncGuestCart } from "@/features/cart/store/thunks";
@@ -174,6 +175,7 @@ export function AdminLoginForm({
           </FieldGroup>
         </form>
       )}
+      <DemoLoginButton />
       <p className="mt-6 text-center font-lora text-sm text-warm-gray">
         <Link href="/login" className="text-gold hover:underline">
           Customer sign in

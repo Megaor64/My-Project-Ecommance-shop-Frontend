@@ -27,7 +27,12 @@ export const selectIsAuthenticated = createSelector(
 
 export const selectIsAdmin = createSelector(
   selectUser,
-  (user) => user?.role === "admin"
+  (user) => user?.role === "admin" || user?.role === "demo-admin"
+);
+
+export const selectIsDemoAdmin = createSelector(
+  selectUser,
+  (user) => user?.role === "demo-admin"
 );
 
 export const selectUserRole = createSelector(selectUser, (user) => user?.role ?? null);
