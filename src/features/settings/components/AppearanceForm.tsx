@@ -58,9 +58,7 @@ export function AppearanceForm({ initialValues }: AppearanceFormProps) {
       await dispatch(
         updateAppearance({ userId: user.id, appearance: form })
       ).unwrap();
-      if (form.theme !== "system") {
-        setTheme(form.theme);
-      }
+      setTheme(form.theme);
       // `t` still holds the previous language in this closure; announce the
       // save in the language that was just applied.
       toast.success(

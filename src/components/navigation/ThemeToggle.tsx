@@ -2,14 +2,10 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-function subscribeNoop() {
-  return () => {};
-}
 
 type ThemeToggleProps = {
   className?: string;
@@ -18,11 +14,11 @@ type ThemeToggleProps = {
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const t = useT();
-  const mounted = useSyncExternalStore(
-    subscribeNoop,
-    () => true,
-    () => false
-  );
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
     return (
@@ -39,7 +35,11 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       aria-label={
         isDark ? t("theme.switchToLight") : t("theme.switchToDark")
       }
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => {
+        // Always write an explicit light/dark value so this click overrides
+        // both "system" and a theme saved in Appearance settings.
+        setTheme(isDark ? "light" : "dark");
+      }}
       className={cn("text-ink hover:text-gold", className)}
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}

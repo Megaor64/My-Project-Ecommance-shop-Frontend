@@ -57,6 +57,8 @@ export function SettingsBootstrap() {
   }, [userId]);
 
   const appearance = ownSettings?.appearance ?? null;
+  const appliedSavedThemeRef = useRef<string | null>(null);
+  const prevUserIdForTheme = useRef<string | null>(userId);
 
   useEffect(() => {
     let effective: AppearanceSettings;
@@ -74,10 +76,34 @@ export function SettingsBootstrap() {
     applyAppearanceToDocument(effective);
   }, [appearance, userId]);
 
-  const theme = appearance?.theme;
+  // Apply the saved theme when it actually changes (account switch or Save).
+  // Do not re-apply on every render — that would undo the navbar sun/moon
+  // toggle, which is meant to override "system" and the saved theme.
+  const savedTheme = appearance?.theme;
   useEffect(() => {
-    if (theme) setTheme(theme);
-  }, [theme, setTheme]);
+    if (!savedTheme) return;
+
+    const prev = prevUserIdForTheme.current;
+    const switchedAccounts = prev != null && prev !== userId;
+    prevUserIdForTheme.current = userId;
+
+    const signature = `${userId ?? "guest"}:${savedTheme}`;
+    if (!switchedAccounts && appliedSavedThemeRef.current === signature) return;
+    appliedSavedThemeRef.current = signature;
+
+    // An explicit light/dark click in the navbar wins over a saved "system"
+    // preference, including session restore (prev userId was still null).
+    if (
+      !switchedAccounts &&
+      savedTheme === "system" &&
+      typeof window !== "undefined"
+    ) {
+      const stored = window.localStorage.getItem("theme");
+      if (stored === "light" || stored === "dark") return;
+    }
+
+    setTheme(savedTheme);
+  }, [savedTheme, userId, setTheme]);
 
   return null;
 }
